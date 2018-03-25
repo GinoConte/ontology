@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import Categories from './Categories'
 import logo from './logo.svg';
@@ -8,7 +9,9 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <Categories />
+        <MuiThemeProvider>
+          <Categories />
+        </MuiThemeProvider>
       </div>
     );
   }
