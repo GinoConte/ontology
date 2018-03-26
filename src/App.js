@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
-import Categories from './Categories'
+import Categories from './Categories';
+import Home from './containers/Home'
 import './App.css';
 
 class App extends Component {
@@ -9,11 +10,11 @@ class App extends Component {
     const routes = [
       {
         path: "/categories",
-        component: Categories
+        component: Categories,
       },
       {
         path: "/",
-        component: Categories
+        component: Home,
       }
     ];
 
