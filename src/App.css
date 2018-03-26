@@ -11,6 +11,10 @@
   /* background-color: white; */
 }
 
+.Card {
+  text-align: center;
+}
+
 .Card-section {
   padding: 20px;
 }
