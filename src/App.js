@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
-import Categories from './Categories';
+import Categories from './containers/Categories';
 import Home from './containers/Home'
+import HousingPrices from './containers/HousingPrices'
 import './App.css';
 
 class App extends Component {
@@ -13,7 +14,12 @@ class App extends Component {
         component: Categories,
       },
       {
+        path: "/housing-prices",
+        component: HousingPrices,
+      },
+      {
         path: "/",
+        exact: true,
         component: Home,
       }
     ];

@@ -14,7 +14,7 @@ class Home extends Component {
         <Container className="Home">
           <Row>
             <Col xs={12}>
-              <h1>Financial Ontology</h1>
+              <h1>Housing Prices</h1>
             </Col>
             <Col xs={12}>
               <div className="Home-buttons-container">

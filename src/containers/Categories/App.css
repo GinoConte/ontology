@@ -1,0 +1,20 @@
+.App {
+  text-align: center;
+  background-color: rgb(245, 245, 245);
+}
+
+.Categories {
+  padding-top: 50px;
+}
+
+.Cards-container {
+  /* background-color: white; */
+}
+
+.Card {
+  text-align: center;
+}
+
+.Card-section {
+  padding: 20px;
+}
