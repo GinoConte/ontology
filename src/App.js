@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
-
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Categories from './containers/Categories';
 import Home from './containers/Home'
 import HousingPrices from './containers/HousingPrices'
 import './App.css';
 
 class App extends Component {
+
   render() {
     const routes = [
       {
@@ -35,9 +36,11 @@ class App extends Component {
     );
 
     return (
-      <BrowserRouter>
-        <Switch>{routes.map(route => routeWithSubRoutes(route))}</Switch>
-      </BrowserRouter>
+      <MuiThemeProvider>
+        <BrowserRouter>
+          <Switch>{routes.map(route => routeWithSubRoutes(route))}</Switch>
+        </BrowserRouter>
+      </MuiThemeProvider>
     );
   }
 }

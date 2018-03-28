@@ -11,7 +11,7 @@ import {
 import FlatButton from 'material-ui/FlatButton';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-import './App.css';
+import './styles.css';
 
 class Categories extends Component {
   render() {
@@ -33,17 +33,15 @@ class Categories extends Component {
       </Col>
     ));
     return (
-      <MuiThemeProvider>
-        <Container className="Categories">
-          <Row className="Cards-container">
-            <Col xs={12}>
-              <Row>
-                {renderedCategories}
-              </Row>
-            </Col>
-          </Row>
-        </Container>
-      </MuiThemeProvider>
+      <Container className="Categories">
+        <Row className="Cards-container">
+          <Col xs={12}>
+            <Row>
+              {renderedCategories}
+            </Row>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 }
