@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@amcharts/amcharts3-react": "^3.0.4",
     "bootstrap": "^4.0.0",
     "classnames": "^2.2.5",
     "material-ui": "^0.20.0",

@@ -9,7 +9,6 @@ import {
   CardText,
 } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import './styles.css';
 

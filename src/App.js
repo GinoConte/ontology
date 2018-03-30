@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Categories from './containers/Categories';
 import Home from './containers/Home'
@@ -36,7 +38,7 @@ class App extends Component {
     );
 
     return (
-      <MuiThemeProvider>
+      <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
         <BrowserRouter>
           <Switch>{routes.map(route => routeWithSubRoutes(route))}</Switch>
         </BrowserRouter>
