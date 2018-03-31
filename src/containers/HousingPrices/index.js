@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Row, Container } from 'reactstrap'
 import AmCharts from '@amcharts/amcharts3-react';
 // import FlatButton from 'material-ui/FlatButton';
+import Divider from 'material-ui/Divider';
+import Paper from 'material-ui/Paper';
 
 import './styles.css';
 
@@ -16,6 +18,14 @@ class Home extends Component {
       {
         "country": "Poland",
         "visits": 328
+      },
+      {
+        "country": "Australia",
+        "visits": 2011
+      },
+      {
+        "country": "China",
+        "visits": 3599
       }
     ];
     return (
@@ -38,7 +48,10 @@ class Home extends Component {
                 "categoryField": "country",
                 "graphs": [{
                   "valueField": "visits",
-                  "type": "line",
+                  "type": "column",
+                  "fillAlphas": 0.4,
+                  "lineAlpha": 0.9,
+                  "lineColor": 'rgb(11, 179, 214)',
                 }]
               }}
             />

@@ -9,3 +9,5 @@
 .Content {
   margin-top: 25px;
 }
+
+.amcharts-chart-div a {display:none !important;}
