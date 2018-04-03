@@ -37,8 +37,13 @@ class App extends Component {
       />
     );
 
+    const muiTheme = darkBaseTheme;
+    muiTheme.palette.accent1Color = "rgb(11, 179, 214)";
+
+    // console.log('dark base theme', darkBaseTheme);
+
     return (
-      <MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}>
+      <MuiThemeProvider muiTheme={getMuiTheme(muiTheme)}>
         <BrowserRouter>
           <Switch>{routes.map(route => routeWithSubRoutes(route))}</Switch>
         </BrowserRouter>
