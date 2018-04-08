@@ -10,10 +10,9 @@ import Slider from 'material-ui/Slider';
 import MenuItem from 'material-ui/MenuItem';
 import Checkbox from 'material-ui/Checkbox';
 
-
 import './styles.css';
 
-class Home extends Component {
+class HousingPrices extends Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
@@ -251,4 +250,4 @@ class Home extends Component {
   }
 }
 
-export default Home;
+export default HousingPrices;

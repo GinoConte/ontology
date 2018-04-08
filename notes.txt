@@ -1,0 +1,21 @@
+thing: {
+    title: 'Stock market prices',
+    analysis: [
+        'regression',
+        'volatility',
+        'trend',
+        'custom': {
+            formula: exampleFormula
+        }
+    dataSource: [
+        {
+            type: 'priceOverTime',
+            source: 'https://reuters.com/api/v1....',
+            description: 'Stock price at the end of each day',
+            params: [],
+        },
+        {
+            type: ...
+        }
+    ],
+}

@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import darkBaseTheme from 'material-ui/styles/baseThemes/darkBaseTheme';
+import lightBaseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Categories from './containers/Categories';
 import Home from './containers/Home'
 import HousingPrices from './containers/HousingPrices'
+import ModelBuilder from './containers/ModelBuilder'
+
 import './App.css';
 
 class App extends Component {
@@ -19,6 +22,10 @@ class App extends Component {
       {
         path: "/housing-prices",
         component: HousingPrices,
+      },
+      {
+        path: "/model-builder",
+        component: ModelBuilder,
       },
       {
         path: "/",
@@ -37,7 +44,7 @@ class App extends Component {
       />
     );
 
-    const muiTheme = darkBaseTheme;
+    const muiTheme = lightBaseTheme;
     muiTheme.palette.accent1Color = "rgb(11, 179, 214)";
 
     // console.log('dark base theme', darkBaseTheme);

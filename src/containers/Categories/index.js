@@ -18,7 +18,7 @@ class Categories extends Component {
     const renderedCategories = categories.map(category => (
       <Col xs={12} sm={12} md={6} lg={4} className="Card-section">
         <Card className="Card">
-          <CardTitle title={category} subtitle="Card subtitle" />
+          <CardTitle title={category} subtitle={category === 'Housing prices' ? 'Prediction model' : 'Card subtitle'} />
           <CardText>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             Donec mattis pretium massa. Aliquam erat volutpat. Nulla facilisi.
@@ -26,7 +26,12 @@ class Categories extends Component {
             Aliquam dui mauris, mattis quis lacus id, pellentesque lobortis odio.
           </CardText>
           <CardActions>
-            <FlatButton href="/housing-prices" label="Start" />
+            <FlatButton href="/model-builder" label="Start" />
+            {
+              category === 'Housing prices' && (
+                <FlatButton label="Data" />
+              )
+            }
           </CardActions>
         </Card>
       </Col>
