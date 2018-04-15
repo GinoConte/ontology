@@ -22,77 +22,74 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui
 // graph payload (with minimalist structure)
 const data = {
   nodes: [
+    // {
+    //   id: 'Context',
+    //   name: 'Housing Prices',
+    //   color: 'rgb(228, 82, 75)',
+    //   symbolType: 'square',
+    // },
+    // {
+    //   id: 'A',
+    //   name: 'Price',
+    //   color: 'rgb(131, 198, 72)',
+    //   symbolType: 'diamond',
+    // }, 
     {
-      id: 'Context',
-      name: 'Housing Prices',
-      color: 'rgb(228, 82, 75)',
-      symbolType: 'square',
+      id: '1',
+      name: 'Click-through rate',
     },
     {
-      id: 'A',
-      name: 'Price',
-      color: 'rgb(131, 198, 72)',
-      symbolType: 'diamond',
-    }, 
-    {
-      id: 'B',
-      name: 'Population',
+      id: '2',
+      name: 'Affiliation',
     },
     {
-      id: 'C',
-      name: 'Inflation',
+      id: '3',
+      name: 'Conversion rate',
     },
     {
-      id: 'D',
-      name: 'Foreign Policy',
+      id: '4',
+      name: 'Conversation',
     },
     {
-      id: 'E',
-      name: 'Interest Rate',
+      id: '5',
+      name: 'Responsiveness',
     }
   ],
   links: [
     {
-      source: 'A',
-      target: 'E',
+      source: '1',
+      target: '2',
       linkType: 'Positive influence',
       linkOrigin: 'via literature',
     },
     {
-      source: 'Context',
-      target: 'A',
-      color: 'red',
+      source: '1',
+      target: '4',
       linkType: 'Operationlization',
     },
     {
-      source: 'E',
-      target: 'B',
+      source: '1',
+      target: '5',
       linkType: 'Positive correlation',
       linkOrigin: 'via model'
     },
     {
-      source: 'B',
-      target: 'C',
+      source: '2',
+      target: '3',
       linkType: 'Negative influence',
       linkOrigin: 'via expert'
     },
     {
-      source: 'C',
-      target: 'D',
-      linkType: 'Positive correlation',
+      source: '4',
+      target: '3',
+      linkType: 'Influence',
       linkOrigin: 'via model'
     },
     {
-      source: 'E',
-      target: 'C',
+      source: '5',
+      target: '3',
       linkType: 'Negative correlation',
       linkOrigin: 'via hypothesis'
-    },
-    {
-      source: 'D',
-      target: 'A',
-      linkType: 'Positive correlation',
-      linkOrigin: 'via literature'
     },
   ]
 };
@@ -108,10 +105,12 @@ class ModelBuilder extends Component {
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
       data: data,
+      dropdownValue: 1,
     }
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
+    this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
@@ -131,6 +130,12 @@ class ModelBuilder extends Component {
     }
     return linksWithNode;
   }
+
+  handleCheckboxFilter(e) {
+    console.log('event?', e);
+  }
+
+  handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
 
   handleNodeClick(nodeID) {
     const nodes = data.nodes;
@@ -242,13 +247,13 @@ class ModelBuilder extends Component {
       });
     }
 
-    console.log('rend', renderedLinksToNode);
+    // console.log('rend', renderedLinksToNode);
     // renderedLinksToNode = this.state.
 
     let influenceString = '';
     let originString = '';
     if (this.state.selectedLinkTargetTitle) {
-      influenceString = `\"${this.state.selectedLinkType}\" on ${this.state.selectedLinkTargetTitle}`;
+      influenceString = `${this.state.selectedLinkType} on ${this.state.selectedLinkTargetTitle}`;
       originString = `Source: ${this.state.selectedLinkOrigin}`;
     }
 
@@ -263,25 +268,27 @@ class ModelBuilder extends Component {
               <div className="GraphControls">
                 <Toolbar className="GraphToolbar">
                   <ToolbarGroup firstChild={true}>
-                    <DropDownMenu value={this.state.value} onChange={this.handleChange}>
-                      <MenuItem value={1} primaryText="All Broadcasts" />
-                      <MenuItem value={2} primaryText="All Voice" />
-                      <MenuItem value={3} primaryText="All Text" />
-                      <MenuItem value={4} primaryText="Complete Voice" />
-                      <MenuItem value={5} primaryText="Complete Text" />
-                      <MenuItem value={6} primaryText="Active Voice" />
-                      <MenuItem value={7} primaryText="Active Text" />
+                    <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Digital marketing" />
+                    <ToolbarSeparator />
+                    <ToolbarTitle className="ToolbarTitle" text="Concept (thing):" />
+                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
+                      <MenuItem value={1} primaryText="Advertising Performance" />
+                      <MenuItem value={2} primaryText="Every Night" />
+                      <MenuItem value={3} primaryText="Weeknights" />
+                      <MenuItem value={4} primaryText="Weekends" />
+                      <MenuItem value={5} primaryText="Weekly" />
                     </DropDownMenu>
                   </ToolbarGroup>
                   <ToolbarGroup>
-                    <ToolbarTitle text="Options" />
-                    <FontIcon className="muidocs-icon-custom-sort" />
+                    {/* <ToolbarTitle text="Options" /> */}
+                    {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
                       label="Simulate"
                       onClick={this.handleSimulate}
                       primary={true} 
                     />
+                    {/* <Checkbox label="Interest" /> */}
                   </ToolbarGroup>
                 </Toolbar>
                 {/* <FlatButton label="Pause" />
@@ -301,21 +308,39 @@ class ModelBuilder extends Component {
               <div className="InfoContainer">
                 <Paper className="InfoContainerPaper" zDepth={1}>
                   <Row>
-                    <Col xs={4}>
+                    {/* <Col xs={4}>
                       <div className="InfoLegend">
                         <div className="InfoLegendTitle">Legend</div>
                         <div className="InfoLegendItem">
-                          <div className="Accent red">■</div> Context (Thing)
+                          <div className="Accent red">■</div> Knowledge Pack
                         </div>
                         <div className="InfoLegendItem">
-                          <div className="Accent green">◆</div> Operationalized Variable
+                          <div className="Accent green">◆</div> Concept (Thing)
                         </div>
                         <div className="InfoLegendItem">
                           <div className="Accent blue">●</div> Influencing Variable
                         </div>
                       </div>
-                    </Col>
+                    </Col> */}
                     <Col xs={4}>
+                      <div className="InfoLegend">
+                        <div className="InfoLegendTitle">Filters</div>
+                        <Row>
+                          <Col xs={6}>
+                            <span className="InfoLegendItem type">Link type</span>
+                            <Checkbox label="Casual" value={1} onCheck={this.handleCheckboxFilter}  />
+                            <Checkbox label="Hypothesized" onCheck={this.handleCheckboxFilter} />
+                          </Col>
+                          <Col xs={6}>
+                            <span className="InfoLegendItem type">Link origin</span>
+                            <Checkbox label="Model" onCheck={this.handleCheckboxFilter} />
+                            <Checkbox label="Reference" onCheck={this.handleCheckboxFilter} />
+                            <Checkbox label="Opinion" onCheck={this.handleCheckboxFilter} />
+                          </Col>
+                        </Row>
+                      </div>
+                    </Col>
+                    <Col xs={6}>
                       <div className="InfoLegend">
                         <div className="InfoLegendTitle selection">
                           { selectedType ? `${selectedTitle}` : 'Nothing selected'}
@@ -325,7 +350,6 @@ class ModelBuilder extends Component {
                             )
                           }
                         </div>
-
                         {
                           influenceString && (
                             <div className="InfoLegendItem">{influenceString}</div>
@@ -337,9 +361,24 @@ class ModelBuilder extends Component {
                           )
                         }
                         {renderedLinksToNode}
+                        { 
+                          selectedType === 'Variable' && (
+                            <div className="InfoLegendButton">
+                              <RaisedButton
+                                label="Add to model"
+                                onClick={this.handleSimulate}
+                                primary={true} 
+                              />
+                            </div>
+                          )
+                        }
                       </div>
                     </Col>
-                    <Col xs={4} />
+                    <Col xs={2} >
+                      <div className="InfoLegend">
+                          Nothing to add
+                      </div>
+                    </Col>
                   </Row>
                 </Paper>
               </div>

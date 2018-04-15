@@ -50,8 +50,9 @@
   /* display: inline-block; */
 }
 
-.InfoLegendItem {
-  /* display: inline-block; */
+.InfoLegendButton {
+  text-align: center;
+  margin: 10px;
 }
 
 .InfoLegendItem.type {
@@ -87,6 +88,25 @@
 
 .SelectField {
   text-align: left;
+}
+
+.Factors {
+  padding-top: 7px;
+  /* text-align: left; */
+}
+
+.ToolbarTitle {
+  font-size: 18px !important;
+  color: black !important;
+  padding-left: 24px !important;
+  padding-right: 0 !important;
+}
+
+.ToolbarTitle.dropdown {
+  margin-left: -15px !important;
+  margin-bottom: 8px !important;
+  padding-left: 5px !important;
+  padding-right: 0 !important;
 }
 
 .amcharts-chart-div a {display:none !important;}
