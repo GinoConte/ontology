@@ -59,13 +59,14 @@ const data = {
     {
       source: '1',
       target: '2',
-      linkType: 'Positive influence',
+      linkType: 'Casual',
       linkOrigin: 'via literature',
     },
     {
       source: '1',
       target: '4',
-      linkType: 'Operationlization',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via model',
     },
     {
       source: '1',
@@ -77,19 +78,27 @@ const data = {
       source: '2',
       target: '3',
       linkType: 'Negative influence',
-      linkOrigin: 'via expert'
+      linkOrigin: 'via opinion'
     },
     {
       source: '4',
       target: '3',
       linkType: 'Influence',
-      linkOrigin: 'via model'
+      linkOrigin: 'via reference'
     },
     {
       source: '5',
       target: '3',
       linkType: 'Negative correlation',
       linkOrigin: 'via hypothesis'
+    },
+  ],
+  removedLinks: [
+    {
+      source: '1',
+      target: '2',
+      linkType: 'Casual',
+      linkOrigin: 'via literature',
     },
   ]
 };
@@ -112,6 +121,7 @@ class ModelBuilder extends Component {
     this.getLinksToNode = this.getLinksToNode.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
+    this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
   };
@@ -129,10 +139,6 @@ class ModelBuilder extends Component {
       }
     }
     return linksWithNode;
-  }
-
-  handleCheckboxFilter(e) {
-    console.log('event?', e);
   }
 
   handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
@@ -172,6 +178,37 @@ class ModelBuilder extends Component {
     })
     // const souNode = nodes.find(function (node) { return node.id === nodeID; });
 
+  }
+
+  handleLinkTypeFilter(e) {
+    console.log('event?', e.target.checked);
+    const isToggleOff = !e.target.checked;
+    const filter = e.target.value;
+    let links = this.state.data.links;
+    let removedLinks = this.state.data.removedLinks;
+    console.log('links', links);
+    if (isToggleOff) {
+      links.forEach((link, index) => {
+        if (link.linkType === filter || link.linkOrigin === filter) {
+          removedLinks.push(link);
+          links.splice(index, 1);
+        }
+      });
+    } else {
+      removedLinks.forEach((link, index) => {
+        if (link.linkType === filter) {
+          links.push(link);
+          removedLinks.splice(index, 1);
+        }
+      });
+    }
+
+    console.log('links after', links);
+
+    let newData = this.state.data;
+    newData.links = links;
+    newData.removedLinks = removedLinks;
+    this.setState({ data: newData });
   }
 
   handleSimulate() {
@@ -328,14 +365,14 @@ class ModelBuilder extends Component {
                         <Row>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link type</span>
-                            <Checkbox label="Casual" value={1} onCheck={this.handleCheckboxFilter}  />
-                            <Checkbox label="Hypothesized" onCheck={this.handleCheckboxFilter} />
+                            <Checkbox value="Casual" label="Casual" onCheck={this.handleLinkTypeFilter}  />
+                            <Checkbox value="Hypothesized" label="Hypothesized" onCheck={this.handleLinkTypeFilter} />
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link origin</span>
-                            <Checkbox label="Model" onCheck={this.handleCheckboxFilter} />
-                            <Checkbox label="Reference" onCheck={this.handleCheckboxFilter} />
-                            <Checkbox label="Opinion" onCheck={this.handleCheckboxFilter} />
+                            <Checkbox value="via model" label="Model" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox value="via reference" label="Reference" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox value="via opinion" label="Opinion" onCheck={this.handleLinkTypeFilter} />
                           </Col>
                         </Row>
                       </div>
