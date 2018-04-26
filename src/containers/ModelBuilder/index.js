@@ -18,6 +18,7 @@ import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import d3 from 'd3-hierarchy';
 
 // graph payload (with minimalist structure)
 const data = {
@@ -71,36 +72,29 @@ const data = {
     {
       source: '1',
       target: '5',
-      linkType: 'Positive correlation',
+      linkType: 'Casual',
       linkOrigin: 'via model'
     },
     {
       source: '2',
       target: '3',
-      linkType: 'Negative influence',
+      linkType: 'Casual',
       linkOrigin: 'via opinion'
     },
     {
       source: '4',
       target: '3',
-      linkType: 'Influence',
+      linkType: 'Casual',
       linkOrigin: 'via reference'
     },
     {
       source: '5',
       target: '3',
-      linkType: 'Negative correlation',
+      linkType: 'Casual',
       linkOrigin: 'via hypothesis'
     },
   ],
-  removedLinks: [
-    {
-      source: '1',
-      target: '2',
-      linkType: 'Casual',
-      linkOrigin: 'via literature',
-    },
-  ]
+  removedLinks: [],
 };
 
 class ModelBuilder extends Component {
@@ -115,6 +109,13 @@ class ModelBuilder extends Component {
       selectedLinkTargetTitle: '',
       data: data,
       dropdownValue: 1,
+      checkboxes: {
+        Casual: true,
+        Hypothesized: true,
+        'via model': true,
+        'via reference': true,
+        'via opinion': true,
+      },
     }
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
@@ -181,43 +182,61 @@ class ModelBuilder extends Component {
   }
 
   handleLinkTypeFilter(e) {
-    console.log('event?', e.target.checked);
     const isToggleOff = !e.target.checked;
     const filter = e.target.value;
     let links = this.state.data.links;
-    let removedLinks = this.state.data.removedLinks;
     console.log('links', links);
+    let removedLinks = this.state.data.removedLinks;
+    let newCheckboxes = this.state.checkboxes;
+
     if (isToggleOff) {
       links.forEach((link, index) => {
-        if (link.linkType === filter || link.linkOrigin === filter) {
+        // console.log('link', link);
+        if ((link.linkType === filter || link.linkOrigin === filter) && links.length > 1) {
           removedLinks.push(link);
-          links.splice(index, 1);
+          links = links.splice(index, 1);
+          // console.log('links removed', links);
+          newCheckboxes[filter] = false;
         }
       });
     } else {
       removedLinks.forEach((link, index) => {
-        if (link.linkType === filter) {
+        if ((link.linkType === filter || link.linkOrigin === filter) && removedLinks.length > 1) {
           links.push(link);
-          removedLinks.splice(index, 1);
+          removedLinks = removedLinks.splice(index, 1);
+          newCheckboxes[filter] = true;
         }
       });
     }
-
-    console.log('links after', links);
-
     let newData = this.state.data;
     newData.links = links;
+
     newData.removedLinks = removedLinks;
-    this.setState({ data: newData });
+    this.setState({
+      checkboxes: newCheckboxes,
+      data: newData,
+    });
   }
 
   handleSimulate() {
     this.setState({ shouldSimulate: true });
   }
 
+  handleAddVariable() {
+     
+  }
+
   render() {
 
-    const { data, selectedNodeID, selectedNodeLinks, selectedTitle, selectedType, shouldSimulate } = this.state;
+    const {
+      checkboxes,
+      data,
+      selectedNodeID,
+      selectedNodeLinks,
+      selectedTitle,
+      selectedType,
+      shouldSimulate
+    } = this.state;
 
     // the graph configuration, you only need to pass down properties
     // that you want to override, otherwise default ones will be used
@@ -271,12 +290,7 @@ class ModelBuilder extends Component {
     let renderedLinksToNode = [];
     if (selectedNodeLinks) {
       renderedLinksToNode = selectedNodeLinks.map((link) => {
-        console.log('link', link);
-        console.log('data', data.nodes);
-
         if (selectedNodeID !== link.source) {
-          console.log('node found', this.getNodeFromID(link.source));
-          console.log('hi', data.nodes[link.source]);
           return <div className="InfoLegendItem">{`${this.getNodeFromID(link.source).name} (${link.linkType})`}</div>
         } else {
           return <div className="InfoLegendItem">{`${this.getNodeFromID(link.target).name} (${link.linkType})`}</div>
@@ -365,8 +379,8 @@ class ModelBuilder extends Component {
                         <Row>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link type</span>
-                            <Checkbox value="Casual" label="Casual" onCheck={this.handleLinkTypeFilter}  />
-                            <Checkbox value="Hypothesized" label="Hypothesized" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox value="Casual" label="Casual" checked={checkboxes.Casual} onCheck={this.handleLinkTypeFilter}  />
+                            <Checkbox value="Hypothesized" label="Hypothesized" checked={checkboxes.Hypothesized} onCheck={this.handleLinkTypeFilter} />
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link origin</span>
@@ -377,6 +391,7 @@ class ModelBuilder extends Component {
                         </Row>
                       </div>
                     </Col>
+                    <Col xs={1} />
                     <Col xs={6}>
                       <div className="InfoLegend">
                         <div className="InfoLegendTitle selection">
@@ -397,13 +412,20 @@ class ModelBuilder extends Component {
                             <div className="InfoLegendItem">{originString}</div>
                           )
                         }
-                        {renderedLinksToNode}
+                        {
+                          renderedLinksToNode.length > 0 && (
+                            <div className="InfoLegendLinks">
+                              <div className="LinksTo">Links</div>
+                              {renderedLinksToNode}
+                            </div>
+                          )
+                        }
                         { 
                           selectedType === 'Variable' && (
                             <div className="InfoLegendButton">
                               <RaisedButton
                                 label="Add to model"
-                                onClick={this.handleSimulate}
+                                onClick={this.handleAddVariable}
                                 primary={true} 
                               />
                             </div>
@@ -411,13 +433,44 @@ class ModelBuilder extends Component {
                         }
                       </div>
                     </Col>
-                    <Col xs={2} >
-                      <div className="InfoLegend">
-                          Nothing to add
-                      </div>
-                    </Col>
+                    <Col xs={1} />
                   </Row>
                 </Paper>
+                <Row>
+                  <Col xd={4} />
+                  <Col xs={8}>
+                    <AmCharts.React
+                      style={{
+                        width: "100%",
+                        height: "500px"
+                      }}
+                      options={{
+                        "type": "radar",
+                        "theme": "light",
+                        "dataProvider": [{
+                          "variable": "Affiliation",
+                          "weight": 1.1
+                        }, {
+                          "variable": "Click-through rate",
+                          "weight": 0.9
+                        }, {
+                          "variable": "Responsiveness",
+                          "weight": 0.66
+                        }],
+                        "colors": ["rgb(11, 179, 214)"],
+                        "startDuration": 0,
+                        "graphs": [{
+                          "balloonText": "Weighting: [[value]]",
+                          "bullet": "round",
+                          "fillAlphas": 0.5,
+                          "lineThickness": 2,
+                          "valueField": "weight"
+                        }],
+                        "categoryField": "variable",
+                      }}
+                    />
+                  </Col>
+                </Row>
               </div>
             </div>
 

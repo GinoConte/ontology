@@ -55,6 +55,12 @@
   margin: 10px;
 }
 
+.InfoLegendLinks {
+  background-color: rgba(11, 179, 214, 0.3);
+  padding: 15px;
+  text-align: center;
+}
+
 .InfoLegendItem.type {
   text-align: center;
   text-decoration: underline;
@@ -65,6 +71,16 @@
   margin-top: -30px;
   margin-left: 5px;
   /* height: 20px; */
+}
+
+.LinksTo {
+  position: absolute;
+  left: 0;
+  text-transform: uppercase;
+  font-size: 14px;
+  -webkit-transform: rotate(-90deg);
+  -moz-transform: rotate(-90deg);
+  padding: 15px;
 }
 
 .Accent {
