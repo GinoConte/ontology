@@ -61,7 +61,7 @@ const data = {
       source: '1',
       target: '2',
       linkType: 'Casual',
-      linkOrigin: 'via literature',
+      linkOrigin: 'via reference',
     },
     {
       source: '1',
@@ -91,7 +91,7 @@ const data = {
       source: '5',
       target: '3',
       linkType: 'Casual',
-      linkOrigin: 'via hypothesis'
+      linkOrigin: 'via opinion'
     },
   ],
   removedLinks: [],
@@ -110,15 +110,11 @@ class ModelBuilder extends Component {
       selectedLinkTargetTitle: '',
       data: data,
       dropdownValue: 1,
-      checkboxes: {
-        Casual: true,
-        Hypothesized: true,
-        'via model': true,
-        'via reference': true,
-        'via opinion': true,
-      },
       isCheckedCasual: true,
       isCheckedHypothesis: true,
+      isCheckedModel: true,
+      isCheckedOpinion: true,
+      isCheckedReference: true,
     }
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
@@ -132,6 +128,9 @@ class ModelBuilder extends Component {
 
     this.handleCheckedCasual = this.handleCheckedCasual.bind(this);
     this.handleCheckedHypothesis = this.handleCheckedHypothesis.bind(this);
+    this.handleCheckedModel = this.handleCheckedModel.bind(this);
+    this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
+    this.handleCheckedReference = this.handleCheckedReference.bind(this);
   };
 
   getNodeFromID(nodeID) {
@@ -192,7 +191,6 @@ class ModelBuilder extends Component {
     const isToggleOff = !e.target.checked;
     const filter = e.target.value;
     let links = this.state.data.links;
-    console.log('links', links);
     let removedLinks = this.state.data.removedLinks;
     let newCheckboxes = this.state.checkboxes;
 
@@ -231,6 +229,18 @@ class ModelBuilder extends Component {
 
   handleCheckedHypothesis() {
     this.setState({ isCheckedHypothesis: !this.state.isCheckedHypothesis });
+  }
+
+  handleCheckedModel() {
+    this.setState({ isCheckedModel: !this.state.isCheckedModel });
+  }
+
+  handleCheckedOpinion() {
+    this.setState({ isCheckedOpinion: !this.state.isCheckedOpinion });
+  }
+
+  handleCheckedReference() {
+    this.setState({ isCheckedReference: !this.state.isCheckedReference });
   }
 
   handleSimulate() {
@@ -354,11 +364,14 @@ class ModelBuilder extends Component {
       const filterTypes = [];
       !this.state.isCheckedCasual && filterTypes.push('Casual');
       !this.state.isCheckedHypothesis && filterTypes.push('Hypothesized');
-      if (filterTypes.indexOf(link.linkType) > -1) {
-      } else {
+      const filterOrigins = [];
+      !this.state.isCheckedModel && filterOrigins.push('via model');
+      !this.state.isCheckedOpinion && filterOrigins.push('via opinion');
+      !this.state.isCheckedReference && filterOrigins.push('via reference');
+
+      if (!(filterTypes.indexOf(link.linkType) > -1) && !(filterOrigins.indexOf(link.linkOrigin) > -1)) {
         filteredData.links.push(link);
       }
-
     });
 
     //check if nodes have links, if so, add them
@@ -410,7 +423,7 @@ class ModelBuilder extends Component {
                     {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
-                      label="Unstick"
+                      label="Gravity"
                       onClick={this.handleSimulate}
                       primary={true} 
                     />
@@ -459,9 +472,9 @@ class ModelBuilder extends Component {
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link origin</span>
-                            <Checkbox label="Model" onCheck={this.handleLinkTypeFilter} />
-                            <Checkbox label="Reference" onCheck={this.handleLinkTypeFilter} />
-                            <Checkbox label="Opinion" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox label="Model" checked={this.state.isCheckedModel} onCheck={this.handleCheckedModel} />
+                            <Checkbox label="Reference" checked={this.state.isCheckedReference} onCheck={this.handleCheckedReference} />
+                            <Checkbox label="Opinion" checked={this.state.isCheckedOpinion} onCheck={this.handleCheckedOpinion} />
                           </Col>
                         </Row>
                       </div>
