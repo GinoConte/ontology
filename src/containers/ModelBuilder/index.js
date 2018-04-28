@@ -101,6 +101,10 @@ class ModelBuilder extends Component {
   constructor() {
     super();
     this.state = {
+      addedVariables: [{
+        "variable": "hi",
+        "weight": 2,
+      }],
       selectedNodeID: '',
       selectedType: '',
       selectedTitle: '',
@@ -120,6 +124,7 @@ class ModelBuilder extends Component {
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
+    this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
@@ -223,12 +228,24 @@ class ModelBuilder extends Component {
   }
 
   handleAddVariable() {
-     
+    // console.log('hi', this.state.selectedType);
+    const { selectedTitle, addedVariables } = this.state;
+    let newVariables = [...addedVariables];
+
+    newVariables.push({
+      'variable': selectedTitle,
+      'weight': 0.75,
+    });
+    console.log('handle', addedVariables);
+    this.setState({ addedVariables: newVariables });
+    // console.log(this.radar);
+    // this.radar.state.chart.validateData();
   }
 
   render() {
 
     const {
+      addedVariables,
       checkboxes,
       data,
       selectedNodeID,
@@ -298,6 +315,14 @@ class ModelBuilder extends Component {
       });
     }
 
+    let renderedVariables = [];
+    if (data) {
+      const variables = data.nodes;
+      renderedVariables = variables.map((variable) => {
+        return <div className="VariableItem">{variable.name}</div>;
+      });
+    }
+
     // console.log('rend', renderedLinksToNode);
     // renderedLinksToNode = this.state.
 
@@ -307,6 +332,8 @@ class ModelBuilder extends Component {
       influenceString = `${this.state.selectedLinkType} on ${this.state.selectedLinkTargetTitle}`;
       originString = `Source: ${this.state.selectedLinkOrigin}`;
     }
+
+    console.log('variables', addedVariables);
 
     return (
       <Container className="Container">
@@ -437,9 +464,18 @@ class ModelBuilder extends Component {
                   </Row>
                 </Paper>
                 <Row>
-                  <Col xd={4} />
+                  <Col xd={4}>
+                    {
+                      renderedVariables.length > 0 && (
+                        <div className="VariablesContainer">
+                          {renderedVariables}
+                        </div>
+                      )
+                    }
+                  </Col>
                   <Col xs={8}>
                     <AmCharts.React
+                      ref={(radar) => { this.radar = radar; }}
                       style={{
                         width: "100%",
                         height: "500px"
@@ -447,16 +483,7 @@ class ModelBuilder extends Component {
                       options={{
                         "type": "radar",
                         "theme": "light",
-                        "dataProvider": [{
-                          "variable": "Affiliation",
-                          "weight": 1.1
-                        }, {
-                          "variable": "Click-through rate",
-                          "weight": 0.9
-                        }, {
-                          "variable": "Responsiveness",
-                          "weight": 0.66
-                        }],
+                        "dataProvider": this.state.addedVariables,
                         "colors": ["rgb(11, 179, 214)"],
                         "startDuration": 0,
                         "graphs": [{

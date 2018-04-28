@@ -80,7 +80,17 @@
   font-size: 14px;
   -webkit-transform: rotate(-90deg);
   -moz-transform: rotate(-90deg);
+  transform: rotate(-90deg);
   padding: 15px;
+}
+
+.VariableItem {
+  margin: 15px;
+}
+
+.VariablesContainer {
+  margin-top: 100px;
+  text-align: left;
 }
 
 .Accent {
