@@ -72,7 +72,7 @@ const data = {
     {
       source: '1',
       target: '5',
-      linkType: 'Casual',
+      linkType: 'Hypothesized',
       linkOrigin: 'via model'
     },
     {
@@ -84,7 +84,7 @@ const data = {
     {
       source: '4',
       target: '3',
-      linkType: 'Casual',
+      linkType: 'Hypothesized',
       linkOrigin: 'via reference'
     },
     {
@@ -118,6 +118,7 @@ class ModelBuilder extends Component {
         'via opinion': true,
       },
       isCheckedCasual: true,
+      isCheckedHypothesis: true,
     }
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
@@ -130,6 +131,7 @@ class ModelBuilder extends Component {
     this.handleSimulate = this.handleSimulate.bind(this);
 
     this.handleCheckedCasual = this.handleCheckedCasual.bind(this);
+    this.handleCheckedHypothesis = this.handleCheckedHypothesis.bind(this);
   };
 
   getNodeFromID(nodeID) {
@@ -225,6 +227,10 @@ class ModelBuilder extends Component {
 
   handleCheckedCasual() {
     this.setState({ isCheckedCasual: !this.state.isCheckedCasual });
+  }
+
+  handleCheckedHypothesis() {
+    this.setState({ isCheckedHypothesis: !this.state.isCheckedHypothesis });
   }
 
   handleSimulate() {
@@ -347,6 +353,7 @@ class ModelBuilder extends Component {
     data.links.forEach((link, index) => {
       const filterTypes = [];
       !this.state.isCheckedCasual && filterTypes.push('Casual');
+      !this.state.isCheckedHypothesis && filterTypes.push('Hypothesized');
       if (filterTypes.indexOf(link.linkType) > -1) {
       } else {
         filteredData.links.push(link);
@@ -366,6 +373,15 @@ class ModelBuilder extends Component {
         }
       });
     });
+
+    //if empty, display the knowledge pack
+    if (filteredData.nodes.length < 1) {
+      filteredData.nodes.push({
+        id: 'Knowledge Pack',
+        name: 'Digital Marketing',
+        color: 'rgb(131, 198, 72)',
+      })
+    }
 
     return (
       <Container className="Container">
@@ -394,7 +410,7 @@ class ModelBuilder extends Component {
                     {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
-                      label="Simulate"
+                      label="Unstick"
                       onClick={this.handleSimulate}
                       primary={true} 
                     />
@@ -438,14 +454,14 @@ class ModelBuilder extends Component {
                         <Row>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link type</span>
-                            <Checkbox value="Casual" label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
-                            <Checkbox value="Hypothesized" label="Hypothesized" checked={checkboxes.Hypothesized} onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
+                            <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link origin</span>
-                            <Checkbox value="via model" label="Model" onCheck={this.handleLinkTypeFilter} />
-                            <Checkbox value="via reference" label="Reference" onCheck={this.handleLinkTypeFilter} />
-                            <Checkbox value="via opinion" label="Opinion" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox label="Model" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox label="Reference" onCheck={this.handleLinkTypeFilter} />
+                            <Checkbox label="Opinion" onCheck={this.handleLinkTypeFilter} />
                           </Col>
                         </Row>
                       </div>
