@@ -101,10 +101,7 @@ class ModelBuilder extends Component {
   constructor() {
     super();
     this.state = {
-      addedVariables: [{
-        "variable": "hi",
-        "weight": 2,
-      }],
+      addedVariables: [],
       selectedNodeID: '',
       selectedType: '',
       selectedTitle: '',
@@ -120,6 +117,7 @@ class ModelBuilder extends Component {
         'via reference': true,
         'via opinion': true,
       },
+      isCheckedCasual: true,
     }
 
     this.getNodeFromID = this.getNodeFromID.bind(this);
@@ -130,6 +128,8 @@ class ModelBuilder extends Component {
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
+
+    this.handleCheckedCasual = this.handleCheckedCasual.bind(this);
   };
 
   getNodeFromID(nodeID) {
@@ -221,6 +221,10 @@ class ModelBuilder extends Component {
       checkboxes: newCheckboxes,
       data: newData,
     });
+  }
+
+  handleCheckedCasual() {
+    this.setState({ isCheckedCasual: !this.state.isCheckedCasual });
   }
 
   handleSimulate() {
@@ -333,7 +337,35 @@ class ModelBuilder extends Component {
       originString = `Source: ${this.state.selectedLinkOrigin}`;
     }
 
-    console.log('variables', addedVariables);
+    // console.log('variables', addedVariables);
+
+    //filter out data
+    let filteredData = {
+      nodes: [],
+      links: [],
+    };
+    data.links.forEach((link, index) => {
+      const filterTypes = [];
+      !this.state.isCheckedCasual && filterTypes.push('Casual');
+      if (filterTypes.indexOf(link.linkType) > -1) {
+      } else {
+        filteredData.links.push(link);
+      }
+
+    });
+
+    //check if nodes have links, if so, add them
+    data.nodes.forEach((node, nodeIndex) => {
+      filteredData.links.forEach((link, linkIndex) => {
+        if (link.source === node.id || link.target === node.id) {
+          //check if id exists
+          if (filteredData.nodes.indexOf(node.id) > -1) {
+          } else {
+            filteredData.nodes.push(node);
+          }
+        }
+      });
+    });
 
     return (
       <Container className="Container">
@@ -374,7 +406,7 @@ class ModelBuilder extends Component {
               </div>
               <Graph
                 id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-                data={this.state.data}
+                data={filteredData}
                 config={myConfig}
                 onClickNode={this.handleNodeClick}
                 onClickLink={this.handleLinkClick}
@@ -406,7 +438,7 @@ class ModelBuilder extends Component {
                         <Row>
                           <Col xs={6}>
                             <span className="InfoLegendItem type">Link type</span>
-                            <Checkbox value="Casual" label="Casual" checked={checkboxes.Casual} onCheck={this.handleLinkTypeFilter}  />
+                            <Checkbox value="Casual" label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
                             <Checkbox value="Hypothesized" label="Hypothesized" checked={checkboxes.Hypothesized} onCheck={this.handleLinkTypeFilter} />
                           </Col>
                           <Col xs={6}>
