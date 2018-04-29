@@ -127,7 +127,7 @@ class ModelBuilder extends Component {
         // Conversation: 0.5,
       },
       weightVariable: 'Variable',
-      weightValue: 1,
+      weightValue: '',
     }
 
     this.addNewNode = this.addNewNode.bind(this);
@@ -591,6 +591,26 @@ class ModelBuilder extends Component {
       </form>
     );
 
+    const renderedSaveForm = (
+      <div>
+        <FlatButton
+          label="Reset"
+          onClick={this.handleSimulate}
+          primary={true} 
+        />
+        <FlatButton
+          label="Save"
+          onClick={this.handleSimulate}
+          primary={true} 
+        />
+        <RaisedButton
+          label="Proceed"
+          onClick={this.handleSimulate}
+          primary={true} 
+        />
+      </div>
+    );
+
     return (
       <Container className="Container">
         <Row>
@@ -803,25 +823,30 @@ class ModelBuilder extends Component {
                       ref={(radar) => { this.radar = radar; }}
                       style={{
                         width: "100%",
-                        height: "500px"
+                        height: "450px"
                       }}
                       options={{
                         "type": "radar",
                         "theme": "light",
                         "dataProvider": dataProvider,
-                        "colors": ["rgb(11, 179, 214)"],
+                        "colors": ["rgb(11, 179, 214)", "#fff"],
                         "startDuration": 0,
                         "graphs": [{
                           "balloonText": "Weighting: [[value]]",
                           "bullet": "round",
-                          "fillAlphas": 0.5,
+                          "fillAlphas": 0.9,
                           "lineThickness": 2,
                           "valueField": "weight",
                           "fontFamily": "Lato",
+                          "fillColors": ["rgb(11, 179, 214)", "rgba(255,255,0,0.7)"],
+                          "gradientOrientation": "horizontal",
                         }],
                         "categoryField": "variable",
                       }}
                     />
+                    <div className="SaveContainer">
+                      {renderedSaveForm}
+                    </div>
                   </Col>
                 </Row>
               </div>

@@ -110,6 +110,14 @@
   margin-left: auto;
 }
 
+.SaveContainer {
+  text-align: center;
+  /* width: 250px; */
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .Accent {
   display: inline-block;
   font-size: 25px;
