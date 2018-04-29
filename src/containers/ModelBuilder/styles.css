@@ -135,4 +135,13 @@
   padding-right: 0 !important;
 }
 
+.CreateNode {
+  text-align: left;
+  float: left;
+}
+
+.CreateNodeInput {
+  margin: 0 15px;
+}
+
 .amcharts-chart-div a {display:none !important;}

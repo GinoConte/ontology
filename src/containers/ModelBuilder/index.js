@@ -12,6 +12,7 @@ import './styles.css';
 import { Graph } from 'react-d3-graph';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
+import TextField from 'material-ui/TextField';
 import FontIcon from 'material-ui/FontIcon';
 import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
 import MenuItem from 'material-ui/MenuItem';
@@ -19,6 +20,8 @@ import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import d3 from 'd3-hierarchy';
+import Dialog from 'material-ui/Dialog';
+
 
 // graph payload (with minimalist structure)
 const data = {
@@ -102,6 +105,11 @@ class ModelBuilder extends Component {
     super();
     this.state = {
       addedVariables: [],
+      editLinkTypeValue: 'Casual',
+      editLinkOriginValue: 'via Model',
+      isEditLinkOpen: false,
+      newLinkInput: '',
+      newVariableInput: '',
       selectedNodeID: '',
       selectedType: '',
       selectedTitle: '',
@@ -117,7 +125,9 @@ class ModelBuilder extends Component {
       isCheckedReference: true,
     }
 
+    this.addNewNode = this.addNewNode.bind(this);
     this.getNodeFromID = this.getNodeFromID.bind(this);
+    this.getNodeFromName = this.getNodeFromName.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
@@ -125,7 +135,19 @@ class ModelBuilder extends Component {
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
+    
+    
+    //modal
+    this.handleLinkTypeChange = this.handleLinkTypeChange.bind(this);
+    this.handleLinkOriginChange = this.handleLinkOriginChange.bind(this);
+    this.handleNewLinkInputChange = this.handleNewLinkInputChange.bind(this);
+    this.toggleEditLink = this.toggleEditLink.bind(this);
+    this.submitEditLink = this.submitEditLink.bind(this);
 
+    //input
+    this.handleNewVariableInputChange = this.handleNewVariableInputChange.bind(this);
+
+    //checkboxes
     this.handleCheckedCasual = this.handleCheckedCasual.bind(this);
     this.handleCheckedHypothesis = this.handleCheckedHypothesis.bind(this);
     this.handleCheckedModel = this.handleCheckedModel.bind(this);
@@ -133,10 +155,32 @@ class ModelBuilder extends Component {
     this.handleCheckedReference = this.handleCheckedReference.bind(this);
   };
 
+  addNewNode() {
+    const { data } = this.state;
+    data.nodes.push({
+      id: 'new node' + data.nodes.length,
+      name: this.state.newVariableInput,
+    });
+    this.setState({
+      data,
+      newVariableInput: '',
+    })
+  }
+
+  handleLinkTypeChange = (event, index, dropdownValue) => this.setState({ editLinkTypeValue: dropdownValue});
+
+  handleLinkOriginChange = (event, index, dropdownValue) => this.setState({ editLinkOriginValue: dropdownValue});
+
   getNodeFromID(nodeID) {
     const nodes = this.state.data.nodes;
     return nodes.find(function (node) { return node.id === nodeID; });
   }
+
+  getNodeFromName(name) {
+    const nodes = this.state.data.nodes;
+    return nodes.find(function (node) { return node.name.toLowerCase() === name.toLowerCase(); });
+  }
+  
   getLinksToNode(nodeID) {
     const links = this.state.data.links;
     const linksWithNode = [];
@@ -243,6 +287,14 @@ class ModelBuilder extends Component {
     this.setState({ isCheckedReference: !this.state.isCheckedReference });
   }
 
+  handleNewVariableInputChange(event) {
+    this.setState({ newVariableInput: event.target.value });
+  }
+
+  handleNewLinkInputChange(event) {
+    this.setState({ newLinkInput: event.target.value });
+  }
+
   handleSimulate() {
     this.setState({ shouldSimulate: true });
   }
@@ -262,12 +314,52 @@ class ModelBuilder extends Component {
     // this.radar.state.chart.validateData();
   }
 
+  submitEditLink() {
+    const linkType = this.state.editLinkTypeValue;
+    const linkOrigin = this.state.editLinkOriginValue;
+    const newData = this.state.data;
+    const targetNode = this.getNodeFromName(this.state.newLinkInput);
+    const sourceNode = this.getNodeFromID(this.state.selectedNodeID);
+
+    if (targetNode) {
+
+      //check if already exists, update if it does
+      let linkExists = false;
+      newData.links.forEach((link, index) => {
+        if ((link.target === sourceNode.id) && !linkExists) {
+          linkExists = true;
+          newData.links[index].linkType = linkType;
+          newData.links[index].linkOrigin = linkOrigin;
+          // break; -- need to implement exception for larger quantities of variables
+        }
+      })
+
+      //doesn't exist, so we push new link
+      if (!linkExists) {
+        newData.links.push({
+          linkOrigin: linkOrigin,
+          linkType: linkType,
+          source: this.state.selectedNodeID,
+          target: targetNode.id,
+        });
+      }
+
+      this.setState({ data: newData });
+      this.toggleEditLink();
+    }
+  }
+
+  toggleEditLink() {
+    this.setState({ isEditLinkOpen: !this.state.isEditLinkOpen });
+  }
+
   render() {
 
     const {
       addedVariables,
       checkboxes,
       data,
+      newVariableInput,
       selectedNodeID,
       selectedNodeLinks,
       selectedTitle,
@@ -375,17 +467,18 @@ class ModelBuilder extends Component {
     });
 
     //check if nodes have links, if so, add them
-    data.nodes.forEach((node, nodeIndex) => {
-      filteredData.links.forEach((link, linkIndex) => {
-        if (link.source === node.id || link.target === node.id) {
-          //check if id exists
-          if (filteredData.nodes.indexOf(node.id) > -1) {
-          } else {
-            filteredData.nodes.push(node);
-          }
-        }
-      });
-    });
+    // data.nodes.forEach((node, nodeIndex) => {
+    //   filteredData.links.forEach((link, linkIndex) => {
+    //     if (link.source === node.id || link.target === node.id) {
+    //       //check if id exists
+    //       if (filteredData.nodes.indexOf(node.id) > -1) {
+    //       } else {
+    //         filteredData.nodes.push(node);
+    //       }
+    //     }
+    //   });
+    // });
+    filteredData.nodes = data.nodes;
 
     //if empty, display the knowledge pack
     if (filteredData.nodes.length < 1) {
@@ -395,6 +488,19 @@ class ModelBuilder extends Component {
         color: 'rgb(131, 198, 72)',
       })
     }
+
+    const editLinkActions = [
+      <FlatButton
+        label="Cancel"
+        // primary={true}
+        onClick={this.toggleEditLink}
+      />,
+      <FlatButton
+        label="Create"
+        primary={true}
+        onClick={this.submitEditLink}
+      />,
+    ];
 
     return (
       <Container className="Container">
@@ -412,10 +518,10 @@ class ModelBuilder extends Component {
                     <ToolbarTitle className="ToolbarTitle" text="Concept (thing):" />
                     <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
                       <MenuItem value={1} primaryText="Advertising Performance" />
-                      <MenuItem value={2} primaryText="Every Night" />
-                      <MenuItem value={3} primaryText="Weeknights" />
-                      <MenuItem value={4} primaryText="Weekends" />
-                      <MenuItem value={5} primaryText="Weekly" />
+                      <MenuItem value={2} primaryText="Impressions" />
+                      <MenuItem value={3} primaryText="CPM" />
+                      <MenuItem value={4} primaryText="Social Growth" />
+                      <MenuItem value={5} primaryText="Monthly Active Users" />
                     </DropDownMenu>
                   </ToolbarGroup>
                   <ToolbarGroup>
@@ -445,6 +551,27 @@ class ModelBuilder extends Component {
                 onMouseOutLink={onMouseOutLink}
               />
               <div className="InfoContainer">
+                <Row>
+                  <Col xs={12}>
+                    <div className="CreateNode">
+                      {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
+                      <TextField
+                        // hintText="Variable name"
+                        className="CreateNodeInput"
+                        floatingLabelText="New variable name"
+                        value={newVariableInput}
+                        onChange={this.handleNewVariableInputChange}
+                      /> 
+                      {/* <RaisedButton
+                        label="Create Variable"
+                        // onClick={this.handleAddVariable}
+                        primary={true} 
+                      />     */}
+                      <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
+            
+                    </div>
+                  </Col>
+                </Row>
                 <Paper className="InfoContainerPaper" zDepth={1}>
                   <Row>
                     {/* <Col xs={4}>
@@ -511,11 +638,42 @@ class ModelBuilder extends Component {
                         { 
                           selectedType === 'Variable' && (
                             <div className="InfoLegendButton">
-                              <RaisedButton
+                              {/* <RaisedButton
                                 label="Add to model"
                                 onClick={this.handleAddVariable}
                                 primary={true} 
+                              /> */}
+                              <RaisedButton
+                                label="Add Link"
+                                onClick={this.toggleEditLink}
+                                primary={true} 
                               />
+                              <Dialog
+                                title="Create a new link"
+                                actions={editLinkActions}
+                                modal={false}
+                                open={this.state.isEditLinkOpen}
+                                onRequestClose={this.toggleEditLink}
+                              >
+                                <TextField
+                                  // hintText="Variable name"
+                                  className="CreateNodeInput"
+                                  floatingLabelText="Target variable name"
+                                  value={this.state.newLinkInput}
+                                  onChange={this.handleNewLinkInputChange}
+                                />
+                                <br />
+                                <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
+                                  <MenuItem value="Casual" primaryText="Casual" />
+                                  <MenuItem value="Hypothesized" primaryText="Hypothesized" />
+                                </DropDownMenu>
+                                <br />
+                                <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
+                                  <MenuItem value="via Model" primaryText="via Model" />
+                                  <MenuItem value="via Opinion" primaryText="via Opinion" />
+                                  <MenuItem value="via Reference" primaryText="via Reference" />
+                                </DropDownMenu>
+                              </Dialog>
                             </div>
                           )
                         }
