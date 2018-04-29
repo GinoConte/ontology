@@ -221,7 +221,7 @@ class ModelBuilder extends Component {
 
     this.setState({
       selectedType: 'Link',
-      selectedTitle: sourceNode.name,
+      selectedTitle: sourceNode.name + ' ⟶ ' + targetNode.name,
       selectedLinkType: selectedLink.linkType,
       selectedLinkOrigin: selectedLink.linkOrigin,
       selectedLinkTargetTitle: targetNode.name,
@@ -327,6 +327,7 @@ class ModelBuilder extends Component {
       let linkExists = false;
       newData.links.forEach((link, index) => {
         if ((link.target === sourceNode.id) && !linkExists) {
+          console.log('found existing link');
           linkExists = true;
           newData.links[index].linkType = linkType;
           newData.links[index].linkOrigin = linkOrigin;
@@ -378,14 +379,15 @@ class ModelBuilder extends Component {
         fontColor: 'rgb(11, 179, 214)',
         size: 300,
         labelProperty: 'name',
-        highlightStrokeColor: 'rgba(255, 198, 40, 0.4)',
+        highlightStrokeColor: 'rgb(255, 198, 40)',
         highlightFontSize: 20,
         highlightFontWeight: 100,
       },
       link: {
         strokeWidth: 5,
-        highlightColor: 'rgba(255, 198, 40, 0.4)',//positive ? green : red
+        highlightColor: 'rgb(255, 198, 40)',//positive ? green : red
       },
+      linkHighlightBehavior: true,
       height: 350,
       automaticRearrangeAfterDropNode: shouldSimulate,
       staticGraph: false,
@@ -441,8 +443,8 @@ class ModelBuilder extends Component {
     let influenceString = '';
     let originString = '';
     if (this.state.selectedLinkTargetTitle) {
-      influenceString = `${this.state.selectedLinkType} on ${this.state.selectedLinkTargetTitle}`;
-      originString = `Source: ${this.state.selectedLinkOrigin}`;
+      influenceString = this.state.selectedLinkType;
+      originString = this.state.selectedLinkOrigin;
     }
 
     // console.log('variables', addedVariables);
@@ -593,12 +595,12 @@ class ModelBuilder extends Component {
                         <div className="InfoLegendTitle">Filters</div>
                         <Row>
                           <Col xs={6}>
-                            <span className="InfoLegendItem type">Link type</span>
+                            <span className="InfoLegendItem filter">Link type</span>
                             <Checkbox label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
                             <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
                           </Col>
                           <Col xs={6}>
-                            <span className="InfoLegendItem type">Link origin</span>
+                            <span className="InfoLegendItem filter">Link origin</span>
                             <Checkbox label="Model" checked={this.state.isCheckedModel} onCheck={this.handleCheckedModel} />
                             <Checkbox label="Reference" checked={this.state.isCheckedReference} onCheck={this.handleCheckedReference} />
                             <Checkbox label="Opinion" checked={this.state.isCheckedOpinion} onCheck={this.handleCheckedOpinion} />
@@ -618,20 +620,35 @@ class ModelBuilder extends Component {
                           }
                         </div>
                         {
-                          influenceString && (
-                            <div className="InfoLegendItem">{influenceString}</div>
-                          )
-                        }
-                        {
-                          originString && (
-                            <div className="InfoLegendItem">{originString}</div>
+                          selectedType === 'Link' && (
+                            <div className="InfoLegendLinks">
+                              <Row>
+                                <Col xs={2}>
+                                  <div className="LinksTo">Type</div>
+                                  <div className="LinksTo">Origin</div>
+                                </Col>
+                                <Col xs={8}>
+                                  {influenceString}
+                                  <br />
+                                  {originString}
+                                </Col>
+                                <Col xs={2} />
+                              </Row>
+                            </div>
                           )
                         }
                         {
                           renderedLinksToNode.length > 0 && (
                             <div className="InfoLegendLinks">
-                              <div className="LinksTo">Links</div>
-                              {renderedLinksToNode}
+                              <Row>
+                                <Col xs={2}>
+                                  <div className="LinksTo">Links</div>
+                                </Col>
+                                <Col xs={8}>
+                                  {renderedLinksToNode}
+                                </Col>
+                                <Col xs={2} />
+                              </Row>
                             </div>
                           )
                         }
