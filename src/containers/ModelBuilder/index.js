@@ -155,7 +155,8 @@ class ModelBuilder extends Component {
     this.handleCheckedReference = this.handleCheckedReference.bind(this);
   };
 
-  addNewNode() {
+  addNewNode(e) {
+    e.preventDefault();
     const { data } = this.state;
     data.nodes.push({
       id: 'new node' + data.nodes.length,
@@ -557,20 +558,22 @@ class ModelBuilder extends Component {
                   <Col xs={12}>
                     <div className="CreateNode">
                       {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
-                      <TextField
-                        // hintText="Variable name"
-                        className="CreateNodeInput"
-                        floatingLabelText="New variable name"
-                        value={newVariableInput}
-                        onChange={this.handleNewVariableInputChange}
-                      /> 
-                      {/* <RaisedButton
-                        label="Create Variable"
-                        // onClick={this.handleAddVariable}
-                        primary={true} 
-                      />     */}
-                      <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
-            
+                      <form onSubmit={this.addNewNode}>
+                        <TextField
+                          // hintText="Variable name"
+                          className="CreateNodeInput"
+                          floatingLabelText="New variable name"
+                          value={newVariableInput}
+                          onChange={this.handleNewVariableInputChange}
+                          onSubmit={this.addNewNode}
+                        /> 
+                        {/* <RaisedButton
+                          label="Create Variable"
+                          // onClick={this.handleAddVariable}
+                          primary={true} 
+                        />     */}
+                        <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
+                      </form>
                     </div>
                   </Col>
                 </Row>

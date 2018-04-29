@@ -14,7 +14,7 @@ import './styles.css';
 
 class Categories extends Component {
   render() {
-    const categories = ['Housing prices', 'Education', 'Stock forecasting', 'Event study']
+    const categories = ['Digital Marketing', 'Housing prices', 'Education', 'Stock forecasting', 'Event study']
     const renderedCategories = categories.map(category => (
       <Col xs={12} sm={12} md={6} lg={4} className="Card-section">
         <Card className="Card">
