@@ -123,6 +123,11 @@ class ModelBuilder extends Component {
       isCheckedModel: true,
       isCheckedOpinion: true,
       isCheckedReference: true,
+      weightValues: {
+        // Conversation: 0.5,
+      },
+      weightVariable: 'Variable',
+      weightValue: 1,
     }
 
     this.addNewNode = this.addNewNode.bind(this);
@@ -153,19 +158,26 @@ class ModelBuilder extends Component {
     this.handleCheckedModel = this.handleCheckedModel.bind(this);
     this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
     this.handleCheckedReference = this.handleCheckedReference.bind(this);
+
+    //weight form
+    this.handleWeightVariableChange = this.handleWeightVariableChange.bind(this);
+    this.handleWeightChange = this.handleWeightChange.bind(this);
+    this.handleWeight = this.handleWeight.bind(this);
   };
 
   addNewNode(e) {
     e.preventDefault();
-    const { data } = this.state;
-    data.nodes.push({
-      id: 'new node' + data.nodes.length,
-      name: this.state.newVariableInput,
-    });
-    this.setState({
-      data,
-      newVariableInput: '',
-    })
+    if (this.state.newVariableInput.length > 0) {
+      const { data } = this.state;
+      data.nodes.push({
+        id: 'new node' + data.nodes.length,
+        name: this.state.newVariableInput,
+      });
+      this.setState({
+        data,
+        newVariableInput: '',
+      })
+    };
   }
 
   handleLinkTypeChange = (event, index, dropdownValue) => this.setState({ editLinkTypeValue: dropdownValue});
@@ -315,6 +327,34 @@ class ModelBuilder extends Component {
     // this.radar.state.chart.validateData();
   }
 
+  handleWeightVariableChange(event, index, value) {
+    const { weightValues } = this.state;
+    let inputValue = 1;
+    if (weightValues[value]) {
+      inputValue = weightValues[value];
+    }
+    this.setState({ weightVariable: value, weightValue: inputValue });
+  }
+
+  handleWeightChange(e) {
+    const numberOnly = /^[\.0-9\b]+$/;
+    // if value is not blank, then test the regex
+    if (e.target.value == '' || numberOnly.test(e.target.value)) {
+       this.setState({ weightValue: e.target.value });
+    }
+  };
+
+  handleWeight(e) {
+    e.preventDefault();
+    const selectedVariable = this.state.weightVariable;
+    const selectedWeight = this.state.weightValue;
+    const newWeightValues = this.state.weightValues;
+    if (selectedVariable && selectedVariable !== 'Variable') {
+      newWeightValues[selectedVariable] = selectedWeight;
+    };
+    this.setState({ weightValues: newWeightValues });
+  }
+
   submitEditLink() {
     const linkType = this.state.editLinkTypeValue;
     const linkOrigin = this.state.editLinkOriginValue;
@@ -366,7 +406,8 @@ class ModelBuilder extends Component {
       selectedNodeLinks,
       selectedTitle,
       selectedType,
-      shouldSimulate
+      shouldSimulate,
+      weightValues,
     } = this.state;
 
     // the graph configuration, you only need to pass down properties
@@ -390,6 +431,7 @@ class ModelBuilder extends Component {
       },
       linkHighlightBehavior: true,
       height: 350,
+      width: 900,
       automaticRearrangeAfterDropNode: shouldSimulate,
       staticGraph: false,
     };
@@ -434,7 +476,15 @@ class ModelBuilder extends Component {
     if (data) {
       const variables = data.nodes;
       renderedVariables = variables.map((variable) => {
-        return <div className="VariableItem">{variable.name}</div>;
+        let value = 1;
+        if (this.state.weightValues[variable.name]) {
+          value = this.state.weightValues[variable.name];
+        }
+        return (
+          <div className="VariableItem">
+            {variable.name}: {value}
+          </div>
+        );
       });
     }
 
@@ -469,7 +519,7 @@ class ModelBuilder extends Component {
       }
     });
 
-    //check if nodes have links, if so, add them
+    //future 'hide independent variables' feature?
     // data.nodes.forEach((node, nodeIndex) => {
     //   filteredData.links.forEach((link, linkIndex) => {
     //     if (link.source === node.id || link.target === node.id) {
@@ -505,11 +555,47 @@ class ModelBuilder extends Component {
       />,
     ];
 
+    const dataProvider = [];
+    filteredData.nodes.forEach((node, index) => {
+      const weight = weightValues[node.name] || 1;
+      dataProvider.push({
+        variable: node.name,
+        weight: weight,
+      })
+    });
+
+    const menuItems = [];
+    menuItems.push(<MenuItem value="Variable" primaryText="Variable" />);
+    filteredData.nodes.forEach((node) => {
+      menuItems.push(<MenuItem value={node.name} primaryText={node.name} />);
+    });
+    const renderedWeightForm = (
+      <form onSubmit={this.handleWeight}>
+        <SelectField
+          floatingLabelText="Edit weight"
+          value={this.state.weightVariable}
+          onChange={this.handleWeightVariableChange}
+          style={{width: 250}}
+        >
+          {menuItems}
+        </SelectField>
+        <div className="WeightForm">
+          <TextField
+            hintText="Weight"
+            value={this.state.weightValue}
+            onChange={this.handleWeightChange}  
+            style={{width: 75}}    
+          />
+          <FlatButton style={{float: 'right',marginTop: 10}} label="Submit" onClick={this.handleWeight} primary={true} disabled={this.state.weightVariable === 'Variable'} />
+        </div>
+      </form>
+    );
+
     return (
       <Container className="Container">
         <Row>
           <Col xs={12}>
-            <h1>Variable Map</h1>
+            <h1>Ontology</h1>
           </Col>
           <Col xs={12}>
             <div className="GraphContainer">
@@ -532,7 +618,7 @@ class ModelBuilder extends Component {
                     {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
-                      label="Gravity"
+                      label="Simulate"
                       onClick={this.handleSimulate}
                       primary={true} 
                     />
@@ -707,7 +793,7 @@ class ModelBuilder extends Component {
                     {
                       renderedVariables.length > 0 && (
                         <div className="VariablesContainer">
-                          {renderedVariables}
+                          {renderedWeightForm}
                         </div>
                       )
                     }
@@ -722,7 +808,7 @@ class ModelBuilder extends Component {
                       options={{
                         "type": "radar",
                         "theme": "light",
-                        "dataProvider": this.state.addedVariables,
+                        "dataProvider": dataProvider,
                         "colors": ["rgb(11, 179, 214)"],
                         "startDuration": 0,
                         "graphs": [{
@@ -730,7 +816,8 @@ class ModelBuilder extends Component {
                           "bullet": "round",
                           "fillAlphas": 0.5,
                           "lineThickness": 2,
-                          "valueField": "weight"
+                          "valueField": "weight",
+                          "fontFamily": "Lato",
                         }],
                         "categoryField": "variable",
                       }}

@@ -27,6 +27,7 @@
 .InfoContainer {
   /* padding: 15px 15px 0; */
   padding: 30px;
+  padding-top: 0;
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
@@ -60,6 +61,7 @@
   background-color: rgba(11, 179, 214, 0.3);
   padding: 15px;
   text-align: center;
+  /* border: 2px solid black; */
 }
 
 .InfoLegendItem.type {
@@ -97,12 +99,15 @@
 }
 
 .VariableItem {
-  margin: 15px;
+  margin: 10px;
+  /* display: inline-block; */
 }
 
 .VariablesContainer {
-  margin-top: 100px;
+  margin-top: 150px;
   text-align: left;
+  width: 250px;
+  margin-left: auto;
 }
 
 .Accent {
@@ -154,6 +159,13 @@
 
 .CreateNodeInput {
   margin: 0 15px;
+}
+
+.WeightForm {
+  /* margin: 20px; */
+  /* padding-bottom: 20px; */
+  /* display: inline-block; */
+  /* text-align: center; */
 }
 
 .amcharts-chart-div a {display:none !important;}
