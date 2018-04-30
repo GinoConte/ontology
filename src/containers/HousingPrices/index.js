@@ -183,8 +183,11 @@ class HousingPrices extends Component {
                 <Col xs={12}>
                   <AmCharts.React
                     style={{
-                      width: "100%",
-                      height: "500px"
+                      width: "97%",
+                      height: "500px",
+                      backgroundColor: "rgb(70,70,70)",
+                      marginLeft: "auto",
+                      marginRight: "auto",
                     }}
                     options={{
                       "theme": "dark",
@@ -197,6 +200,7 @@ class HousingPrices extends Component {
                           "id": "v1",
                           "axisAlpha": 0.1
                       }],
+                      "backgroundColor": "#000",
                       "graphs": [{
                           "useNegativeColorIfDown": true,
                           // "balloonText": "[[category]]<br><b>value: [[value]]</b>",
