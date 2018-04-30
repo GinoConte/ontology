@@ -707,8 +707,9 @@ class ModelBuilder extends Component {
     });
     const renderedWeightForm = (
       <form onSubmit={this.handleWeight}>
+        <div className="InfoLegendTitle">Edit Weight</div>
         <SelectField
-          floatingLabelText="Edit weight"
+          floatingLabelText="Variable name"
           value={this.state.weightVariable}
           onChange={this.handleWeightVariableChange}
           style={{width: 250}}
@@ -774,9 +775,9 @@ class ModelBuilder extends Component {
                     {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
-                      label="Simulate"
+                      label="Auto"
                       onClick={this.handleSimulate}
-                      primary={true} 
+                      primary={!this.state.shouldSimulate} 
                     />
                     {/* <Checkbox label="Interest" /> */}
                   </ToolbarGroup>
@@ -797,7 +798,7 @@ class ModelBuilder extends Component {
               />
               <div className="InfoContainer">
                 <Row>
-                  <Col xs={12}>
+                  <Col xs={9}>
                     <div className="CreateNode">
                       {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
                       <form onSubmit={this.addNewNode}>
@@ -816,6 +817,15 @@ class ModelBuilder extends Component {
                         />     */}
                         <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
                       </form>
+                    </div>
+                  </Col>
+                  <Col xs={3}>
+                    <div className="SaveEdits">
+                      <RaisedButton
+                        label="Save Edits"
+                        onClick={this.toggleEditLink}
+                        primary={true} 
+                      />
                     </div>
                   </Col>
                 </Row>

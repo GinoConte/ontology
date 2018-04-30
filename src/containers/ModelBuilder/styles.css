@@ -118,6 +118,11 @@
   margin-right: auto;
 }
 
+.SaveEdits {
+  float: right;
+  margin-top: 20px;
+}
+
 .Accent {
   display: inline-block;
   font-size: 25px;

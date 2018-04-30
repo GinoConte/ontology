@@ -12,7 +12,7 @@ class Home extends Component {
       <Container className="Home">
         <Row>
           <Col xs={12}>
-            <h1>Interactive Ontologies</h1>
+            <h1>Knowledge Base</h1>
           </Col>
           <Col xs={12}>
             <div className="Home-buttons-container">
