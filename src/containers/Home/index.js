@@ -17,7 +17,7 @@ class Home extends Component {
           <Col xs={12}>
             <div className="Home-buttons-container">
               <FlatButton label="About" className="Home-button" />
-              <FlatButton href="/categories" label="Categories" className="Home-button" />
+              <FlatButton href="/categories" label="Knowledge Packs" className="Home-button" primary={true} />
             </div>
           </Col>
         </Row>

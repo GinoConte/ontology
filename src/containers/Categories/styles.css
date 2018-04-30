@@ -15,6 +15,17 @@
   text-align: center;
 }
 
+.Category.content {
+  background-color: rgba(255,255,0,0.2);
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
 .Card-section {
   padding: 20px;
+}
+
+.Card-section.last {
+  margin-top: auto;
+  margin-bottom: auto;
 }

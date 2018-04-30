@@ -1,9 +1,10 @@
 .Home {
   text-align: center;
-  background-color: rgb(42, 42, 42) !important;
+  /* background-color: rgb(42, 42, 42) !important; */
   margin-top: 50px;
   padding: 50px 0;
-  color: rgb(240, 240, 240);
+  /* color: rgb(240, 240, 240); */
+  background-color: rgb(230, 230, 230) !important;
 }
 
 .Home-buttons-container {
@@ -11,5 +12,5 @@
 }
 
 .Home-button {
-  color: rgb(240, 240, 240) !important;
+  /* color: rgb(240, 240, 240) !important; */
 }

@@ -14,28 +14,37 @@ import './styles.css';
 
 class Categories extends Component {
   render() {
-    const categories = ['Digital Marketing', 'Housing prices', 'Education', 'Stock forecasting', 'Event study']
-    const renderedCategories = categories.map(category => (
-      <Col xs={12} sm={12} md={6} lg={4} className="Card-section">
-        <Card className="Card">
-          <CardTitle title={category} subtitle={category === 'Housing prices' ? 'Prediction model' : 'Card subtitle'} />
-          <CardText>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Donec mattis pretium massa. Aliquam erat volutpat. Nulla facilisi.
-            Donec vulputate interdum sollicitudin. Nunc lacinia auctor quam sed pellentesque.
-            Aliquam dui mauris, mattis quis lacus id, pellentesque lobortis odio.
-          </CardText>
-          <CardActions>
-            <FlatButton href="/model-builder" label="Start" />
-            {
-              category === 'Housing prices' && (
-                <FlatButton label="Data" />
-              )
-            }
-          </CardActions>
-        </Card>
-      </Col>
-    ));
+    const categories = ['Digital Marketing', 'Housing prices', 'Education', 'Stock forecasting', 'Event study', 'Add'];
+    const renderedCategories = categories.map(category => {
+      if (category !== 'Add') {
+        return (
+          <Col xs={12} sm={12} md={6} lg={4} className="Card-section">
+            <Card className="Card">
+              <CardTitle title={category} subtitle={category === 'Digital Marketing' ? 'Advertising Performance & User Activity' : 'Card subtitle'} />
+              <CardText className={"Category content"}>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Donec mattis pretium massa. Aliquam erat volutpat. Nulla facilisi.
+                Donec vulputate interdum sollicitudin. Nunc lacinia auctor quam sed pellentesque.
+                Aliquam dui mauris, mattis quis lacus id, pellentesque lobortis odio.
+              </CardText>
+              <CardActions>
+                <FlatButton href="/model-builder" label="Start" primary={true} />
+              </CardActions>
+            </Card>
+          </Col>
+        )
+      } else {
+        return (
+          <Col xs={12} sm={12} md={6} lg={4} className="Card-section last">
+            <Card className="Card">
+              <CardActions>
+                <FlatButton href="/model-builder" label="Load More" />
+              </CardActions>
+            </Card>
+          </Col>
+        );
+      }
+    });
     return (
       <Container className="Categories">
         <Row className="Cards-container">

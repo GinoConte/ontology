@@ -26,18 +26,6 @@ import Dialog from 'material-ui/Dialog';
 // graph payload (with minimalist structure)
 const data = {
   nodes: [
-    // {
-    //   id: 'Context',
-    //   name: 'Housing Prices',
-    //   color: 'rgb(228, 82, 75)',
-    //   symbolType: 'square',
-    // },
-    // {
-    //   id: 'A',
-    //   name: 'Price',
-    //   color: 'rgb(131, 198, 72)',
-    //   symbolType: 'diamond',
-    // }, 
     {
       id: '1',
       name: 'Click-through rate',
@@ -95,6 +83,154 @@ const data = {
       target: '3',
       linkType: 'Casual',
       linkOrigin: 'via opinion'
+    },
+  ],
+  removedLinks: [],
+};
+
+const data2 = {
+  nodes: [
+    {
+      id: '1',
+      name: 'A',
+    },
+    {
+      id: '2',
+      name: 'B',
+    },
+    {
+      id: '3',
+      name: 'C',
+    },
+    {
+      id: '4',
+      name: 'D',
+    },
+    {
+      id: '5',
+      name: 'E',
+    },
+    {
+      id: '6',
+      name: 'F',
+    },
+    {
+      id: '7',
+      name: 'G',
+    },
+    {
+      id: '8',
+      name: 'H',
+    },
+    {
+      id: '9',
+      name: 'I',
+    },
+    {
+      id: '10',
+      name: 'J',
+    },
+    {
+      id: '11',
+      name: 'K',
+    },
+    {
+      id: '12',
+      name: 'AA',
+    },
+    {
+      id: '13',
+      name: 'AB',
+    },
+    {
+      id: '14',
+      name: 'AC',
+    }
+  ],
+  links: [
+    {
+      source: '1',
+      target: '2',
+      linkType: 'Casual',
+      linkOrigin: 'via reference',
+    },
+    {
+      source: '1',
+      target: '4',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via model',
+    },
+    {
+      source: '1',
+      target: '5',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via model'
+    },
+    {
+      source: '2',
+      target: '3',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '8',
+      target: '9',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '9',
+      target: '10',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '10',
+      target: '11',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '10',
+      target: '8',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '5',
+      target: '7',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '1',
+      target: '11',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
+    },
+    {
+      source: '4',
+      target: '3',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via reference'
+    },
+    {
+      source: '12',
+      target: '13',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via reference'
+    },
+    {
+      source: '13',
+      target: '14',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via reference'
+    },
+    {
+      source: '14',
+      target: '12',
+      linkType: 'Hypothesized',
+      linkOrigin: 'via reference'
     },
   ],
   removedLinks: [],
