@@ -45,106 +45,14 @@ const data = {
     {
       id: '5',
       name: 'Responsiveness',
-    }
-  ],
-  links: [
-    {
-      source: '1',
-      target: '2',
-      linkType: 'Casual',
-      linkOrigin: 'via reference',
-    },
-    {
-      source: '1',
-      target: '4',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via model',
-    },
-    {
-      source: '1',
-      target: '5',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via model'
-    },
-    {
-      source: '2',
-      target: '3',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '4',
-      target: '3',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via reference'
-    },
-    {
-      source: '5',
-      target: '3',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-  ],
-  removedLinks: [],
-};
-
-const data2 = {
-  nodes: [
-    {
-      id: '1',
-      name: 'A',
-    },
-    {
-      id: '2',
-      name: 'B',
-    },
-    {
-      id: '3',
-      name: 'C',
-    },
-    {
-      id: '4',
-      name: 'D',
-    },
-    {
-      id: '5',
-      name: 'E',
     },
     {
       id: '6',
-      name: 'F',
+      name: 'Session duration',
     },
     {
       id: '7',
-      name: 'G',
-    },
-    {
-      id: '8',
-      name: 'H',
-    },
-    {
-      id: '9',
-      name: 'I',
-    },
-    {
-      id: '10',
-      name: 'J',
-    },
-    {
-      id: '11',
-      name: 'K',
-    },
-    {
-      id: '12',
-      name: 'AA',
-    },
-    {
-      id: '13',
-      name: 'AB',
-    },
-    {
-      id: '14',
-      name: 'AC',
+      name: 'Age',
     }
   ],
   links: [
@@ -160,51 +68,15 @@ const data2 = {
       linkType: 'Hypothesized',
       linkOrigin: 'via model',
     },
-    {
-      source: '1',
-      target: '5',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via model'
-    },
+    // {
+    //   source: '1',
+    //   target: '5',
+    //   linkType: 'Hypothesized',
+    //   linkOrigin: 'via model'
+    // },
     {
       source: '2',
       target: '3',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '8',
-      target: '9',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '9',
-      target: '10',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '10',
-      target: '11',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '10',
-      target: '8',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '5',
-      target: '7',
-      linkType: 'Casual',
-      linkOrigin: 'via opinion'
-    },
-    {
-      source: '1',
-      target: '11',
       linkType: 'Casual',
       linkOrigin: 'via opinion'
     },
@@ -215,22 +87,16 @@ const data2 = {
       linkOrigin: 'via reference'
     },
     {
-      source: '12',
-      target: '13',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via reference'
+      source: '5',
+      target: '3',
+      linkType: 'Casual',
+      linkOrigin: 'via opinion'
     },
     {
-      source: '13',
-      target: '14',
+      source: '6',
+      target: '3',
       linkType: 'Hypothesized',
-      linkOrigin: 'via reference'
-    },
-    {
-      source: '14',
-      target: '12',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via reference'
+      linkOrigin: 'via mode'
     },
   ],
   removedLinks: [],
@@ -259,6 +125,7 @@ class ModelBuilder extends Component {
       isCheckedModel: true,
       isCheckedOpinion: true,
       isCheckedReference: true,
+      isCheckedIndependent: true,
       weightValues: {
         // Conversation: 0.5,
       },
@@ -294,6 +161,7 @@ class ModelBuilder extends Component {
     this.handleCheckedModel = this.handleCheckedModel.bind(this);
     this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
     this.handleCheckedReference = this.handleCheckedReference.bind(this);
+    this.handleCheckedIndependent = this.handleCheckedIndependent.bind(this);
 
     //weight form
     this.handleWeightVariableChange = this.handleWeightVariableChange.bind(this);
@@ -418,6 +286,10 @@ class ModelBuilder extends Component {
 
   handleCheckedCasual() {
     this.setState({ isCheckedCasual: !this.state.isCheckedCasual });
+  }
+
+  handleCheckedIndependent() {
+    this.setState({ isCheckedIndependent: !this.state.isCheckedIndependent });
   }
 
   handleCheckedHypothesis() {
@@ -656,18 +528,21 @@ class ModelBuilder extends Component {
     });
 
     //future 'hide independent variables' feature?
-    // data.nodes.forEach((node, nodeIndex) => {
-    //   filteredData.links.forEach((link, linkIndex) => {
-    //     if (link.source === node.id || link.target === node.id) {
-    //       //check if id exists
-    //       if (filteredData.nodes.indexOf(node.id) > -1) {
-    //       } else {
-    //         filteredData.nodes.push(node);
-    //       }
-    //     }
-    //   });
-    // });
-    filteredData.nodes = data.nodes;
+    if (!this.state.isCheckedIndependent) {
+      data.nodes.forEach((node, nodeIndex) => {
+        filteredData.links.forEach((link, linkIndex) => {
+          if (link.source === node.id || link.target === node.id) {
+            //check if id exists
+            if (filteredData.nodes.indexOf(node.id) > -1) {
+            } else {
+              filteredData.nodes.push(node);
+            }
+          }
+        });
+      });
+    } else {
+      filteredData.nodes = data.nodes;
+    }
 
     //if empty, display the knowledge pack
     if (filteredData.nodes.length < 1) {
@@ -853,6 +728,8 @@ class ModelBuilder extends Component {
                             <span className="InfoLegendItem filter">Link type</span>
                             <Checkbox label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
                             <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
+                            <span className="InfoLegendItem filter">Independence</span>
+                            <Checkbox label="Independent" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent}  />
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem filter">Link origin</span>
