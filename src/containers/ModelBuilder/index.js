@@ -53,13 +53,15 @@ const data = {
     {
       id: '7',
       name: 'Age',
+      color: 'red',
     }
   ],
   links: [
     {
       source: '1',
       target: '2',
-      linkType: 'Casual',
+      color: 'green',
+      linkType: 'Causal',
       linkOrigin: 'via reference',
     },
     {
@@ -77,7 +79,7 @@ const data = {
     {
       source: '2',
       target: '3',
-      linkType: 'Casual',
+      linkType: 'Causal',
       linkOrigin: 'via opinion'
     },
     {
@@ -89,14 +91,14 @@ const data = {
     {
       source: '5',
       target: '3',
-      linkType: 'Casual',
+      linkType: 'Causal',
       linkOrigin: 'via opinion'
     },
     {
       source: '6',
       target: '3',
       linkType: 'Hypothesized',
-      linkOrigin: 'via mode'
+      linkOrigin: 'via mode',
     },
   ],
   removedLinks: [],
@@ -107,7 +109,7 @@ class ModelBuilder extends Component {
     super();
     this.state = {
       addedVariables: [],
-      editLinkTypeValue: 'Casual',
+      editLinkTypeValue: 'Causal',
       editLinkOriginValue: 'via Model',
       isEditLinkOpen: false,
       newLinkInput: '',
@@ -120,7 +122,7 @@ class ModelBuilder extends Component {
       selectedLinkTargetTitle: '',
       data: data,
       dropdownValue: 1,
-      isCheckedCasual: true,
+      isCheckedCausal: true,
       isCheckedHypothesis: true,
       isCheckedModel: true,
       isCheckedOpinion: true,
@@ -156,7 +158,7 @@ class ModelBuilder extends Component {
     this.handleNewVariableInputChange = this.handleNewVariableInputChange.bind(this);
 
     //checkboxes
-    this.handleCheckedCasual = this.handleCheckedCasual.bind(this);
+    this.handleCheckedCausal = this.handleCheckedCausal.bind(this);
     this.handleCheckedHypothesis = this.handleCheckedHypothesis.bind(this);
     this.handleCheckedModel = this.handleCheckedModel.bind(this);
     this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
@@ -284,8 +286,8 @@ class ModelBuilder extends Component {
     });
   }
 
-  handleCheckedCasual() {
-    this.setState({ isCheckedCasual: !this.state.isCheckedCasual });
+  handleCheckedCausal() {
+    this.setState({ isCheckedCausal: !this.state.isCheckedCausal });
   }
 
   handleCheckedIndependent() {
@@ -434,8 +436,10 @@ class ModelBuilder extends Component {
         highlightFontWeight: 100,
       },
       link: {
-        strokeWidth: 5,
+        // color: 'green',
+        strokeWidth: 3,
         highlightColor: 'rgb(255, 198, 40)',//positive ? green : red
+        semanticStrokeWidth: true,
       },
       linkHighlightBehavior: true,
       height: 350,
@@ -513,9 +517,11 @@ class ModelBuilder extends Component {
       nodes: [],
       links: [],
     };
+    const numLinks = {};
+
     data.links.forEach((link, index) => {
       const filterTypes = [];
-      !this.state.isCheckedCasual && filterTypes.push('Casual');
+      !this.state.isCheckedCausal && filterTypes.push('Causal');
       !this.state.isCheckedHypothesis && filterTypes.push('Hypothesized');
       const filterOrigins = [];
       !this.state.isCheckedModel && filterOrigins.push('via model');
@@ -523,9 +529,16 @@ class ModelBuilder extends Component {
       !this.state.isCheckedReference && filterOrigins.push('via reference');
 
       if (!(filterTypes.indexOf(link.linkType) > -1) && !(filterOrigins.indexOf(link.linkOrigin) > -1)) {
+        //count links to nodes
+        numLinks[link.target] ? numLinks[link.target]++ : numLinks[link.target] = 1;
+        numLinks[link.source] ? numLinks[link.source]++ : numLinks[link.source] = 1;
+
+        link.linkType === 'Causal' ? link.value = 10 : link.value = 2;
         filteredData.links.push(link);
       }
     });
+
+    console.log('links?', numLinks);
 
     //future 'hide independent variables' feature?
     if (!this.state.isCheckedIndependent) {
@@ -541,15 +554,23 @@ class ModelBuilder extends Component {
         });
       });
     } else {
-      filteredData.nodes = data.nodes;
+      data.nodes.forEach((node, index) => {
+        filteredData.nodes.push({
+          id: node.id,
+          name: node.name,
+          size: numLinks[node.id] ? numLinks[node.id] * 300 : 300,
+        });
+      });
+      // filteredData.nodes = data.nodes;
     }
 
     //if empty, display the knowledge pack
     if (filteredData.nodes.length < 1) {
       filteredData.nodes.push({
-        id: 'Knowledge Pack',
-        name: 'Digital Marketing',
+        id: 'Concept',
+        name: 'Advertising Performance',
         color: 'rgb(131, 198, 72)',
+        symbolType: 'diamond',
       })
     }
 
@@ -634,7 +655,9 @@ class ModelBuilder extends Component {
               <div className="GraphControls">
                 <Toolbar className="GraphToolbar">
                   <ToolbarGroup firstChild={true}>
-                    <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Digital marketing" />
+                    <a href="/categories">
+                      <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Digital marketing" />
+                    </a>
                     <ToolbarSeparator />
                     <ToolbarTitle className="ToolbarTitle" text="Concept (thing):" />
                     <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
@@ -697,7 +720,7 @@ class ModelBuilder extends Component {
                   <Col xs={3}>
                     <div className="SaveEdits">
                       <RaisedButton
-                        label="Save Edits"
+                        label="Save To Knowledge Base"
                         onClick={this.toggleEditLink}
                         primary={true} 
                       />
@@ -726,7 +749,7 @@ class ModelBuilder extends Component {
                         <Row>
                           <Col xs={6}>
                             <span className="InfoLegendItem filter">Link type</span>
-                            <Checkbox label="Casual" checked={this.state.isCheckedCasual} onCheck={this.handleCheckedCasual}  />
+                            <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
                             <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
                             <span className="InfoLegendItem filter">Independence</span>
                             <Checkbox label="Independent" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent}  />
@@ -813,7 +836,7 @@ class ModelBuilder extends Component {
                                 />
                                 <br />
                                 <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
-                                  <MenuItem value="Casual" primaryText="Casual" />
+                                  <MenuItem value="Causal" primaryText="Causal" />
                                   <MenuItem value="Hypothesized" primaryText="Hypothesized" />
                                 </DropDownMenu>
                                 <br />
