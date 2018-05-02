@@ -60,7 +60,6 @@ const data = {
     {
       source: '1',
       target: '2',
-      color: 'green',
       linkType: 'Causal',
       linkOrigin: 'via reference',
     },
@@ -80,7 +79,8 @@ const data = {
       source: '2',
       target: '3',
       linkType: 'Causal',
-      linkOrigin: 'via opinion'
+      linkOrigin: 'via opinion',
+      color: '#0ff',
     },
     {
       source: '4',
@@ -99,6 +99,7 @@ const data = {
       target: '3',
       linkType: 'Hypothesized',
       linkOrigin: 'via mode',
+      color: '#ff0',
     },
   ],
   removedLinks: [],
@@ -436,7 +437,7 @@ class ModelBuilder extends Component {
         highlightFontWeight: 100,
       },
       link: {
-        // color: 'green',
+        color: 'd3d3d3',
         strokeWidth: 3,
         highlightColor: 'rgb(255, 198, 40)',//positive ? green : red
         semanticStrokeWidth: true,
@@ -534,6 +535,8 @@ class ModelBuilder extends Component {
         numLinks[link.source] ? numLinks[link.source]++ : numLinks[link.source] = 1;
 
         link.linkType === 'Causal' ? link.value = 10 : link.value = 2;
+        link.linkType === 'Causal' ? link.color = '#8f4' : link.color = '#3a2';
+
         filteredData.links.push(link);
       }
     });
