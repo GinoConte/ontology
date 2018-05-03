@@ -27,79 +27,76 @@ import Dialog from 'material-ui/Dialog';
 const data = {
   nodes: [
     {
-      id: '1',
+      id: 'Click-through rate',
       name: 'Click-through rate',
     },
     {
-      id: '2',
+      id: 'Affiliation',
       name: 'Affiliation',
     },
     {
-      id: '3',
+      id: 'Conversion rate',
       name: 'Conversion rate',
     },
     {
-      id: '4',
+      id: 'Conversation',
       name: 'Conversation',
     },
     {
-      id: '5',
+      id: 'Responsiveness',
       name: 'Responsiveness',
     },
     {
-      id: '6',
+      id: 'Session duration',
       name: 'Session duration',
     },
     {
-      id: '7',
+      id: 'Age',
       name: 'Age',
-      color: 'red',
     }
   ],
   links: [
     {
-      source: '1',
-      target: '2',
+      source: 'Click-through rate',
+      target: 'Affiliation',
       linkType: 'Causal',
       linkOrigin: 'via reference',
+      value: 10,
     },
     {
-      source: '1',
-      target: '4',
+      source: 'Click-through rate',
+      target: 'Conversation',
       linkType: 'Hypothesized',
       linkOrigin: 'via model',
+      value: 2,
     },
-    // {
-    //   source: '1',
-    //   target: '5',
-    //   linkType: 'Hypothesized',
-    //   linkOrigin: 'via model'
-    // },
     {
-      source: '2',
-      target: '3',
+      source: 'Affiliation',
+      target: 'Conversion rate',
       linkType: 'Causal',
       linkOrigin: 'via opinion',
-      color: '#0ff',
+      value: 3,
     },
     {
-      source: '4',
-      target: '3',
+      source: 'Conversation',
+      target: 'Conversion rate',
       linkType: 'Hypothesized',
-      linkOrigin: 'via reference'
+      linkOrigin: 'via reference',
+      value: 12,
     },
     {
-      source: '5',
-      target: '3',
+      source: 'Responsiveness',
+      target: 'Conversion rate',
       linkType: 'Causal',
-      linkOrigin: 'via opinion'
+      linkOrigin: 'via opinion',
+      value: 4,
     },
     {
-      source: '6',
-      target: '3',
+      source: 'Session duration',
+      target: 'Conversion rate',
       linkType: 'Hypothesized',
       linkOrigin: 'via mode',
-      color: '#ff0',
+      value: 8,
     },
   ],
   removedLinks: [],
@@ -501,8 +498,6 @@ class ModelBuilder extends Component {
       });
     }
 
-    // console.log('rend', renderedLinksToNode);
-    // renderedLinksToNode = this.state.
 
     let influenceString = '';
     let originString = '';
@@ -510,8 +505,6 @@ class ModelBuilder extends Component {
       influenceString = this.state.selectedLinkType;
       originString = this.state.selectedLinkOrigin;
     }
-
-    // console.log('variables', addedVariables);
 
     //filter out data
     let filteredData = {
@@ -534,14 +527,14 @@ class ModelBuilder extends Component {
         numLinks[link.target] ? numLinks[link.target]++ : numLinks[link.target] = 1;
         numLinks[link.source] ? numLinks[link.source]++ : numLinks[link.source] = 1;
 
-        link.linkType === 'Causal' ? link.value = 10 : link.value = 2;
-        link.linkType === 'Causal' ? link.color = '#8f4' : link.color = '#3a2';
+        // link.linkType === 'Causal' ? link.value = 10 : link.value = 2;
+        link.linkType === 'Causal' ? link.color = 'rgba(131, 198, 72, 0.9)' : link.color = 'rgba(228, 82, 75, 0.9)';
 
         filteredData.links.push(link);
       }
     });
 
-    console.log('links?', numLinks);
+    console.log('hey', filteredData.links);
 
     //future 'hide independent variables' feature?
     if (!this.state.isCheckedIndependent) {
