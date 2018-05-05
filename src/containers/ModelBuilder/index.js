@@ -530,6 +530,14 @@ class ModelBuilder extends Component {
         // link.linkType === 'Causal' ? link.value = 10 : link.value = 2;
         link.linkType === 'Causal' ? link.color = 'rgba(131, 198, 72, 0.9)' : link.color = 'rgba(228, 82, 75, 0.9)';
 
+        const origin = link.linkOrigin;
+        if (origin === 'via model') {
+          link.dash = "5, 5";
+        } else if (origin === 'via hypothesis') {
+          link.dash = "0";
+        } else if (origin === 'via opinion') {
+          link.dash = "15, 10, 5, 10";
+        };
         filteredData.links.push(link);
       }
     });
