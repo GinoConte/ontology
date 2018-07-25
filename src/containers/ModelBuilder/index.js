@@ -22,6 +22,7 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui
 import d3 from 'd3-hierarchy';
 import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
+import { Redirect } from 'react-router-dom';
 
 
 // graph payload (with minimalist structure)
@@ -132,6 +133,8 @@ class ModelBuilder extends Component {
       },
       weightVariable: 'Variable',
       weightValue: '',
+      redirectToUpdateToken: false,
+      token: '',
     }
 
     this.addNewNode = this.addNewNode.bind(this);
@@ -330,7 +333,24 @@ class ModelBuilder extends Component {
   }
 
   onSaveToKB() {
-    const token = generateCombination(3, "", true);
+
+    //1 check if token exists
+
+      // if so save to current token
+        let token = this.state.token;
+        //2 check if changes are made to current token
+
+      // if not generate new token
+        token = generateCombination(3, "", true);
+              
+      //save to database
+
+      //redirect to /model-builder/:token
+      this.setState({
+        token,
+        redirectToUpdateToken: true,
+      });
+
     console.log('generated token', token);
   }
 
@@ -660,11 +680,19 @@ class ModelBuilder extends Component {
       </div>
     );
 
+    let renderedTokenRedirect;
+    if (this.state.redirectToUpdateToken) {
+      const tokenURL = `/model-builder/${this.state.token || ''}`;
+      renderedTokenRedirect = <Redirect to={tokenURL} />;
+      this.setState({ redirectToUpdateToken: false });
+    }
+
     return (
       <Container className="Container">
         <Row>
           <Col xs={12}>
             <h1>Ontology</h1>
+            {renderedTokenRedirect}
           </Col>
           <Col xs={12}>
             <div className="GraphContainer">
