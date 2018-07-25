@@ -24,6 +24,10 @@ class App extends Component {
         component: HousingPrices,
       },
       {
+        path: "/model-builder/:token",
+        component: ModelBuilder,
+      },
+      {
         path: "/model-builder",
         component: ModelBuilder,
       },

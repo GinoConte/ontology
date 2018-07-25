@@ -21,6 +21,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import d3 from 'd3-hierarchy';
 import Dialog from 'material-ui/Dialog';
+import { generateCombination } from 'gfycat-style-urls';
 
 
 // graph payload (with minimalist structure)
@@ -95,7 +96,7 @@ const data = {
       source: 'Session duration',
       target: 'Conversion rate',
       linkType: 'Hypothesized',
-      linkOrigin: 'via mode',
+      linkOrigin: 'via reference',
       value: 8,
     },
   ],
@@ -143,7 +144,7 @@ class ModelBuilder extends Component {
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
-    
+    this.onSaveToKB = this.onSaveToKB.bind(this);
     
     //modal
     this.handleLinkTypeChange = this.handleLinkTypeChange.bind(this);
@@ -168,6 +169,14 @@ class ModelBuilder extends Component {
     this.handleWeightChange = this.handleWeightChange.bind(this);
     this.handleWeight = this.handleWeight.bind(this);
   };
+  
+  componentDidMount() {
+    const { token } = this.props.match.params || '';
+    if (token) {
+      console.log('We have a token: ', token);
+    }
+
+  }
 
   addNewNode(e) {
     e.preventDefault();
@@ -320,6 +329,11 @@ class ModelBuilder extends Component {
     this.setState({ shouldSimulate: true });
   }
 
+  onSaveToKB() {
+    const token = generateCombination(3, "", true);
+    console.log('generated token', token);
+  }
+
   handleAddVariable() {
     // console.log('hi', this.state.selectedType);
     const { selectedTitle, addedVariables } = this.state;
@@ -329,7 +343,7 @@ class ModelBuilder extends Component {
       'variable': selectedTitle,
       'weight': 0.75,
     });
-    console.log('handle', addedVariables);
+    // console.log('handle', addedVariables);
     this.setState({ addedVariables: newVariables });
     // console.log(this.radar);
     // this.radar.state.chart.validateData();
@@ -376,7 +390,7 @@ class ModelBuilder extends Component {
       let linkExists = false;
       newData.links.forEach((link, index) => {
         if ((link.target === sourceNode.id) && !linkExists) {
-          console.log('found existing link');
+          // console.log('found existing link');
           linkExists = true;
           newData.links[index].linkType = linkType;
           newData.links[index].linkOrigin = linkOrigin;
@@ -436,7 +450,7 @@ class ModelBuilder extends Component {
       link: {
         color: 'd3d3d3',
         strokeWidth: 3,
-        highlightColor: 'rgb(255, 198, 40)',//positive ? green : red
+        highlightColor: 'rgb(255, 198, 40)',
         semanticStrokeWidth: true,
       },
       linkHighlightBehavior: true,
@@ -542,8 +556,6 @@ class ModelBuilder extends Component {
       }
     });
 
-    console.log('hey', filteredData.links);
-
     //future 'hide independent variables' feature?
     if (!this.state.isCheckedIndependent) {
       data.nodes.forEach((node, nodeIndex) => {
@@ -562,7 +574,7 @@ class ModelBuilder extends Component {
         filteredData.nodes.push({
           id: node.id,
           name: node.name,
-          size: numLinks[node.id] ? numLinks[node.id] * 300 : 300,
+          size: numLinks[node.id] ? numLinks[node.id] * 350 : 300,
         });
       });
       // filteredData.nodes = data.nodes;
@@ -725,7 +737,7 @@ class ModelBuilder extends Component {
                     <div className="SaveEdits">
                       <RaisedButton
                         label="Save To Knowledge Base"
-                        onClick={this.toggleEditLink}
+                        onClick={this.onSaveToKB}
                         primary={true} 
                       />
                     </div>
