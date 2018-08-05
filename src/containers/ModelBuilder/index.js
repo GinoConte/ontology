@@ -567,11 +567,16 @@ class ModelBuilder extends Component {
         const origin = link.linkOrigin;
         if (origin === 'via model') {
           link.dash = "5, 5";
-        } else if (origin === 'via hypothesis') {
+          link.label = "via Model";
+        } else if (origin === 'via reference') {
           link.dash = "0";
+          link.label = "via Reference";
         } else if (origin === 'via opinion') {
           link.dash = "15, 10, 5, 10";
-        };
+          link.label = "via Opinion";
+        } else {
+          link.label = " ";
+        }
         filteredData.links.push(link);
       }
     });
@@ -703,11 +708,11 @@ class ModelBuilder extends Component {
                       <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Digital marketing" />
                     </a>
                     <ToolbarSeparator />
-                    <ToolbarTitle className="ToolbarTitle" text="Concept (thing):" />
+                    <ToolbarTitle className="ToolbarTitle" text="Activities:" />
                     <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
-                      <MenuItem value={1} primaryText="Advertising Performance" />
-                      <MenuItem value={2} primaryText="Impressions" />
-                      <MenuItem value={3} primaryText="CPM" />
+                      <MenuItem value={1} primaryText="Explore Variables" />
+                      <MenuItem value={2} primaryText="Model Builder" />
+                      <MenuItem value={3} primaryText="View datasets" />
                       <MenuItem value={4} primaryText="Social Growth" />
                       <MenuItem value={5} primaryText="Monthly Active Users" />
                     </DropDownMenu>
@@ -728,7 +733,7 @@ class ModelBuilder extends Component {
                 <FlatButton label="Simulate" /> */}
               </div>
               <Graph
-                id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
+                id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
                 data={filteredData}
                 config={myConfig}
                 onClickNode={this.handleNodeClick}
