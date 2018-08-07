@@ -23,6 +23,15 @@
   margin-top: 25px;
 }
 
+.Legend {
+  width: 300px;
+  margin: 30px;
+  position: absolute;
+  right: 0;
+  top: 40px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
 
 .InfoContainer {
   /* padding: 15px 15px 0; */

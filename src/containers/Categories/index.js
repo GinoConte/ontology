@@ -14,7 +14,7 @@ import './styles.css';
 
 class Categories extends Component {
   render() {
-    const categories = ['Digital Marketing', 'Housing prices', 'Education', 'Stock forecasting', 'Event study', 'A', 'B', 'C', 'D', 'E', 'F', 'Add'];
+    const categories = ['Housing prices', 'Digital Marketing', 'Education', 'Stock forecasting', 'Event study', 'A', 'B', 'C', 'D', 'E', 'F', 'Add'];
     const renderedCategories = categories.map(category => {
       if (category !== 'Add') {
         return (

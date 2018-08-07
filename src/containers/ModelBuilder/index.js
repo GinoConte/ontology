@@ -693,19 +693,19 @@ class ModelBuilder extends Component {
     }
 
     return (
-      <Container className="Container">
+      <Container className="Container" style={{minWidth: "960px"}}>
+        {renderedTokenRedirect}
         <Row>
-          <Col xs={12}>
+          {/* <Col xs={12}>
             <h1>Ontology</h1>
-            {renderedTokenRedirect}
-          </Col>
+          </Col> */}
           <Col xs={12}>
-            <div className="GraphContainer">
+            <div className="GraphContainer" style={{background: "#fff9e5"}}>
               <div className="GraphControls">
                 <Toolbar className="GraphToolbar">
                   <ToolbarGroup firstChild={true}>
                     <a href="/categories">
-                      <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Digital marketing" />
+                      <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Housing Prices" />
                     </a>
                     <ToolbarSeparator />
                     <ToolbarTitle className="ToolbarTitle" text="Activities:" />
@@ -732,6 +732,9 @@ class ModelBuilder extends Component {
                 {/* <FlatButton label="Pause" />
                 <FlatButton label="Simulate" /> */}
               </div>
+              <Paper className="Legend">
+                Legend         
+              </Paper>
               <Graph
                 id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
                 data={filteredData}
@@ -745,7 +748,7 @@ class ModelBuilder extends Component {
               />
               <div className="InfoContainer">
                 <Row>
-                  <Col xs={9}>
+                  <Col xs={8}>
                     <div className="CreateNode">
                       {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
                       <form onSubmit={this.addNewNode}>
@@ -766,7 +769,7 @@ class ModelBuilder extends Component {
                       </form>
                     </div>
                   </Col>
-                  <Col xs={3}>
+                  <Col xs={4}>
                     <div className="SaveEdits">
                       <RaisedButton
                         label="Save To Knowledge Base"
@@ -778,20 +781,6 @@ class ModelBuilder extends Component {
                 </Row>
                 <Paper className="InfoContainerPaper" zDepth={1}>
                   <Row>
-                    {/* <Col xs={4}>
-                      <div className="InfoLegend">
-                        <div className="InfoLegendTitle">Legend</div>
-                        <div className="InfoLegendItem">
-                          <div className="Accent red">■</div> Knowledge Pack
-                        </div>
-                        <div className="InfoLegendItem">
-                          <div className="Accent green">◆</div> Concept (Thing)
-                        </div>
-                        <div className="InfoLegendItem">
-                          <div className="Accent blue">●</div> Influencing Variable
-                        </div>
-                      </div>
-                    </Col> */}
                     <Col xs={4}>
                       <div className="InfoLegend">
                         <div className="InfoLegendTitle">Filters</div>
@@ -903,6 +892,10 @@ class ModelBuilder extends Component {
                     <Col xs={1} />
                   </Row>
                 </Paper>
+              </div>
+            </div>
+            {/* <div className="ModelContainer">
+              <div className="InfoContainer">
                 <Row>
                   <Col xd={4}>
                     {
@@ -945,7 +938,7 @@ class ModelBuilder extends Component {
                   </Col>
                 </Row>
               </div>
-            </div>
+            </div> */}
 
           </Col>
         </Row>
