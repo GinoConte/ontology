@@ -24,12 +24,12 @@
 }
 
 .Legend {
-  width: 300px;
+  width: 200px;
   margin: 30px;
   position: absolute;
   right: 0;
   top: 40px;
-  font-size: 14px;
+  font-size: 10px;
   text-transform: uppercase;
 }
 

@@ -3,27 +3,22 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Row, Container } from 'reactstrap'
 import AmCharts from '@amcharts/amcharts3-react';
 import FlatButton from 'material-ui/FlatButton';
-import Divider from 'material-ui/Divider';
 import Paper from 'material-ui/Paper';
 import SelectField from 'material-ui/SelectField';
-import Slider from 'material-ui/Slider';
 import Checkbox from 'material-ui/Checkbox';
 import './styles.css';
 import { Graph } from 'react-d3-graph';
-import IconMenu from 'material-ui/IconMenu';
-import IconButton from 'material-ui/IconButton';
+import { InteractiveForceGraph, ForceGraphNode, ForceGraphArrowLink, ForceGraphLink, updateSimulation, runSimulation, createSimulation } from 'react-vis-force';
 import TextField from 'material-ui/TextField';
-import FontIcon from 'material-ui/FontIcon';
-import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
-import d3 from 'd3-hierarchy';
 import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 
+import { ImportData, ImportReferences } from '../../utils/ImportData';
 
 // graph payload (with minimalist structure)
 const data = {
@@ -104,10 +99,22 @@ const data = {
   removedLinks: [],
 };
 
+function hsl_col_perc(percent, start, end) {
+  var a = percent / 100,
+      b = (end - start) * a,
+  		c = b + start;
+
+  // Return a CSS HSL string
+  return 'hsl('+c+', 100%, 50%)';
+}
+
 class ModelBuilder extends Component {
   constructor() {
     super();
     this.state = {
+      alpha: 1,
+      conceptValue: 1,
+      conceptFilterName: 'All',
       addedVariables: [],
       editLinkTypeValue: 'Causal',
       editLinkOriginValue: 'via Model',
@@ -120,7 +127,7 @@ class ModelBuilder extends Component {
       selectedLinkType: '',
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
-      data: data,
+      data: { nodes: [], links: [] },
       dropdownValue: 1,
       isCheckedCausal: true,
       isCheckedHypothesis: true,
@@ -135,18 +142,22 @@ class ModelBuilder extends Component {
       weightValue: '',
       redirectToUpdateToken: false,
       token: '',
+      references: [],
     }
 
     this.addNewNode = this.addNewNode.bind(this);
     this.getNodeFromID = this.getNodeFromID.bind(this);
     this.getNodeFromName = this.getNodeFromName.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
+    this.getReferenceFromID = this.getReferenceFromID.bind(this);
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
+    this.handleConceptChange = this.handleConceptChange.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
+    this.isNodeInConcept = this.isNodeInConcept.bind(this);
     this.onSaveToKB = this.onSaveToKB.bind(this);
     
     //modal
@@ -179,6 +190,20 @@ class ModelBuilder extends Component {
       console.log('We have a token: ', token);
     }
 
+    // import data from csv
+    ImportData(graph => {
+      this.setState({
+        // data: data,
+        data: graph,
+      });
+    });
+
+    ImportReferences(references => {
+      this.setState({
+        references,
+      });
+    });
+    
   }
 
   addNewNode(e) {
@@ -192,6 +217,7 @@ class ModelBuilder extends Component {
       this.setState({
         data,
         newVariableInput: '',
+        alpha: this.state.alpha + 1,
       })
     };
   }
@@ -221,28 +247,86 @@ class ModelBuilder extends Component {
     return linksWithNode;
   }
 
-  handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
+  getReferenceFromID(nodeReferences = '') {
+    const referencesToFind = nodeReferences.replace(' ', '').split(',');
+    const referencesFound = [];
+    const { references } = this.state;
+    for (const referenceToFind in referencesToFind) {
+      for (const reference in references) {
+        if (referencesToFind[referenceToFind] === references[reference].id) {
+          referencesFound.push(references[reference]);
+        }
+      }
+    }
+    return referencesFound;
+  }
 
-  handleNodeClick(nodeID) {
-    const nodes = data.nodes;
-    const selectedNode = nodes.find(function (node) { return node.id === nodeID; });
+  handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
+  handleConceptChange = (event, index, conceptValue) => {
+    const selectedConcept = event.target.innerHTML;
+    ImportData(data => {
+      if (selectedConcept === 'All') {
+        return this.setState({data});
+      }
+      let newData = {
+        nodes: data.nodes.slice(),
+        links: data.links.slice(),
+        concepts: data.concepts.slice(),
+      };
+      newData.nodes = data.nodes.filter(node => {
+        return node.concept_2 === selectedConcept || node.concept_1 === selectedConcept || node.concept_3 === selectedConcept;
+      });
+      const linksWithCorrectSources = data.links.filter(link => {
+        for (const newNode in newData.nodes) {
+          // console.log('node', newNode);
+          // console.log('currn lint', link);
+          if (newData.nodes[newNode].id === link.source)
+            return true;
+        }
+      })
+      const linksWithCorrectTargets = linksWithCorrectSources.filter(link => {
+        for (const newNode in newData.nodes) {
+          if (newData.nodes[newNode].id === link.target)
+            return true;
+        }
+      })
+      newData.links = linksWithCorrectTargets;  
+  
+      console.log('simulation ref?', this.forceGraphRef);
+      // this.forceGraphRef
+      // this.forceGraphRef.props.zoom = false;  
+      // this.forceGraphRef.simulation.restart();
+      this.setState({
+        conceptValue,
+        data: newData,
+        alpha: 0.1,
+      });
+
+    });
+  };
+
+  handleNodeClick(event, clickedNode) {
+    console.log('node clicked', clickedNode);
+    const nodes = this.state.data.nodes;
+    const selectedNode = nodes.find(function (node) { return clickedNode.id === node.id; });
     this.setState({
-      selectedNodeID: nodeID,
+      selectedNodeID: selectedNode.id,
+      selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
       selectedTitle: selectedNode.name,
       selectedType: 'Variable',
       selectedLinkType: '',
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
-      shouldSimulate: false,
-      selectedNodeLinks: this.getLinksToNode(nodeID),
+      shouldSimulate: true,
+      selectedNodeLinks: this.getLinksToNode(clickedNode.id),
     });
   }
 
   handleLinkClick(sourceID, targetID) {
-    const nodes = data.nodes;
+    const nodes = this.state.data.nodes;
     const sourceNode = nodes.find(function (node) { return node.id === sourceID; });
     const targetNode = nodes.find(function (node) { return node.id === targetID; });
-    const links = data.links;
+    const links = this.state.data.links;
     const selectedLink = links.find(function (link) { 
       return ((link.source === sourceID && link.target === targetID)
         || (link.source === targetID && link.target === sourceID)); 
@@ -252,9 +336,12 @@ class ModelBuilder extends Component {
       selectedType: 'Link',
       selectedTitle: sourceNode.name + ' ⟶ ' + targetNode.name,
       selectedLinkType: selectedLink.linkType,
-      selectedLinkOrigin: selectedLink.linkOrigin,
+      selectedLinkOrigin: this.getReferenceFromID(selectedLink.linkOrigin),
+      selectedLinkReference: selectedLink.reference || '',
+      selectedLinkModel: selectedLink.model || '',
       selectedLinkTargetTitle: targetNode.name,
       selectedNodeLinks: [],
+      selectedNodeReferences: [],
     })
     // const souNode = nodes.find(function (node) { return node.id === nodeID; });
 
@@ -329,7 +416,28 @@ class ModelBuilder extends Component {
   }
 
   handleSimulate() {
-    this.setState({ shouldSimulate: true });
+    this.setState({
+      shouldSimulate: !this.state.shouldSimulate,
+      alpha: this.state.alpha === 0.1 ? 0.01 : 0.1,
+    });
+  }
+
+  isNodeInConcept(node) {
+    const selectedConcept = this.state.conceptFilterName || 'All';
+    if (selectedConcept === 'All') {
+      return true;
+    } else {
+      if (node.concept_1 && node.concept_1 === selectedConcept) {
+        return true;
+      } 
+      if (node.concept_2 && node.concept_2 === selectedConcept) {
+        return true;
+      } 
+      if (node.concept_3 && node.concept_3 === selectedConcept) {
+        return true;
+      } 
+    }
+    return false;
   }
 
   onSaveToKB() {
@@ -446,6 +554,7 @@ class ModelBuilder extends Component {
       newVariableInput,
       selectedNodeID,
       selectedNodeLinks,
+      selectedNodeReferences,
       selectedTitle,
       selectedType,
       shouldSimulate,
@@ -457,25 +566,25 @@ class ModelBuilder extends Component {
     const myConfig = {
       nodeHighlightBehavior: true,
       node: {
-        color: 'rgb(11, 179, 214)',
-        fontSize: 20,
+        color: 'rgba(11, 179, 214, 1)',
+        fontSize: 13,
         fontWeight: 100,
         fontColor: 'rgb(11, 179, 214)',
-        size: 300,
+        size: 200,
         labelProperty: 'name',
         highlightStrokeColor: 'rgb(255, 198, 40)',
-        highlightFontSize: 20,
+        highlightFontSize: 13,
         highlightFontWeight: 100,
       },
       link: {
         color: 'd3d3d3',
         strokeWidth: 3,
         highlightColor: 'rgb(255, 198, 40)',
-        semanticStrokeWidth: true,
+        semanticStrokeWidth: false,
       },
       linkHighlightBehavior: true,
-      height: 350,
-      width: 900,
+      height: 500,
+      width: "100%",
       automaticRearrangeAfterDropNode: shouldSimulate,
       staticGraph: false,
     };
@@ -509,9 +618,9 @@ class ModelBuilder extends Component {
     if (selectedNodeLinks) {
       renderedLinksToNode = selectedNodeLinks.map((link) => {
         if (selectedNodeID !== link.source) {
-          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.source).name} (${link.linkType})`}</div>
+          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.source)} (${link.linkType})`}</div>
         } else {
-          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.target).name} (${link.linkType})`}</div>
+          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.target)} (${link.linkType})`}</div>
         }
       });
     }
@@ -535,9 +644,23 @@ class ModelBuilder extends Component {
 
     let influenceString = '';
     let originString = '';
+    let referenceString = '';
+    let modelString = '';
     if (this.state.selectedLinkTargetTitle) {
       influenceString = this.state.selectedLinkType;
       originString = this.state.selectedLinkOrigin;
+      modelString = this.state.selectedLinkModel;
+    }
+
+    let renderedNodeReferences;
+    if (selectedNodeReferences) {
+      renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
+        return (
+          <div style={{fontSize:'12px',textAlign:'left',}}>
+            <span style={{textDecoration: 'underline'}}>{reference.id}:</span><span>&nbsp;{reference.item}</span>
+          </div>
+        );
+      });
     }
 
     //filter out data
@@ -571,6 +694,7 @@ class ModelBuilder extends Component {
         } else if (origin === 'via reference') {
           link.dash = "0";
           link.label = "via Reference";
+          // link.label = " ";
         } else if (origin === 'via opinion') {
           link.dash = "15, 10, 5, 10";
           link.label = "via Opinion";
@@ -589,7 +713,13 @@ class ModelBuilder extends Component {
             //check if id exists
             if (filteredData.nodes.indexOf(node.id) > -1) {
             } else {
-              filteredData.nodes.push(node);
+              filteredData.nodes.push({
+                id: node.id,
+                name: node.name,
+                // name: numLinks[node.id] > 2 ? node.name : ' ',
+                renderLabel: numLinks[node.id] > 1 ? true : false,
+                size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
+              });
             }
           }
         });
@@ -599,7 +729,9 @@ class ModelBuilder extends Component {
         filteredData.nodes.push({
           id: node.id,
           name: node.name,
-          size: numLinks[node.id] ? numLinks[node.id] * 350 : 300,
+          // name: numLinks[node.id] > 2 ? node.name : ' ',
+          renderLabel: numLinks[node.id] > 1 ? true : false,
+          size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
         });
       });
       // filteredData.nodes = data.nodes;
@@ -692,6 +824,83 @@ class ModelBuilder extends Component {
       this.setState({ redirectToUpdateToken: false });
     }
 
+    // render the graph
+    const renderedForceGraphNodes = data.nodes.map(node => {
+      let colorPercentage = numLinks[node.id] * 5 > 100 ? 100 : numLinks[node.id] * 3;
+      if (!numLinks[node.id]) {
+        colorPercentage = 1;
+      }
+      const color = hsl_col_perc(colorPercentage, 190, 200);
+      let renderedNode = (
+        <ForceGraphNode
+          // fill="rgba(30, 210, 235, 1)"
+          fill={color}
+          node={ { id: node.id, name: node.name, radius: 3, } }
+        />
+      );
+      if (numLinks[node.id] > 5) {
+        renderedNode = (
+          <ForceGraphNode
+            fill={color}
+            // size="200"
+            // showLabel
+            node={ { id: node.id, name: node.name, radius: 3, } }
+          />
+        );
+      }
+      if (data.nodes.length < 30) {
+        renderedNode = (
+          <ForceGraphNode
+            fill={color}
+            showLabel
+            node={ { id: node.id, name: node.name, radius: 3, } }
+          />
+        );
+      }
+      return renderedNode;
+    });
+
+    const renderedForceGraphLinks = data.links.map(link => {
+      return (
+        <ForceGraphArrowLink
+          stroke={link.linkType === 'Causal' ? 'rgba(131, 198, 72, 0.8)' : 'rgba(228, 82, 75, 0.8)'}
+          targetRadius="1"
+          onClick={(e) => console.log('hello', e)}
+          link={ { source: link.source, target: link.target, value: 1 } }
+        />
+      );
+    });
+
+    const renderedForceGraph = (
+      <InteractiveForceGraph
+        highlightDependencies
+        zoom
+        zoomOptions={ { zoomSpeed: 0.03 } }
+        labelAttr="name"
+        onSelectNode={this.handleNodeClick}
+        simulationOptions={{ 
+          animate: true,
+          height: 500,
+          width: 1000,
+          radiusMargin: 5,
+          // alpha: 1,
+          // alphaDecay: 0.001,
+          // alphaTarget: 0.9,
+          // alphaMin: 0.1,
+          // alpha: 3,
+        }}
+        ref={(el) => this.forceGraphRef = el}
+        opacityFactor={0.4}
+      >
+        {renderedForceGraphNodes}
+        {renderedForceGraphLinks}
+      </InteractiveForceGraph>
+    )
+
+    const renderedConceptDropdownItems = data.concepts ? data.concepts.map((concept, index) => {
+      return <MenuItem value={index + 2} primaryText={concept} />
+    }) : null;
+
     return (
       <Container className="Container" style={{minWidth: "960px"}}>
         {renderedTokenRedirect}
@@ -708,6 +917,16 @@ class ModelBuilder extends Component {
                       <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Housing Prices" />
                     </a>
                     <ToolbarSeparator />
+                    <ToolbarTitle className="ToolbarTitle" text="Concept:" />
+                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.conceptValue} onChange={this.handleConceptChange}>
+                      <MenuItem value={1} primaryText="All" />
+                      {renderedConceptDropdownItems}
+                    </DropDownMenu>
+                  </ToolbarGroup>
+                  <ToolbarGroup>
+                    {/* <ToolbarTitle text="Options" /> */}
+                    {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
+                    {/* <ToolbarSeparator />
                     <ToolbarTitle className="ToolbarTitle" text="Activities:" />
                     <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
                       <MenuItem value={1} primaryText="Explore Variables" />
@@ -715,14 +934,14 @@ class ModelBuilder extends Component {
                       <MenuItem value={3} primaryText="View datasets" />
                       <MenuItem value={4} primaryText="Social Growth" />
                       <MenuItem value={5} primaryText="Monthly Active Users" />
-                    </DropDownMenu>
+                    </DropDownMenu> */}
                   </ToolbarGroup>
                   <ToolbarGroup>
                     {/* <ToolbarTitle text="Options" /> */}
                     {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                     <ToolbarSeparator />
                     <RaisedButton
-                      label="Auto"
+                      label="Animate"
                       onClick={this.handleSimulate}
                       primary={!this.state.shouldSimulate} 
                     />
@@ -732,10 +951,15 @@ class ModelBuilder extends Component {
                 {/* <FlatButton label="Pause" />
                 <FlatButton label="Simulate" /> */}
               </div>
-              <Paper className="Legend">
-                Legend         
+              <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
+                <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
+                  <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
+                  <br />
+                  <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
+                </Col>     
               </Paper>
-              <Graph
+              {renderedForceGraph}
+              {/* <Graph
                 id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
                 data={filteredData}
                 config={myConfig}
@@ -745,7 +969,7 @@ class ModelBuilder extends Component {
                 onMouseOutNode={onMouseOutNode}
                 onMouseOverLink={onMouseOverLink}
                 onMouseOutLink={onMouseOutLink}
-              />
+              /> */}
               <div className="InfoContainer">
                 <Row>
                   <Col xs={8}>
@@ -789,8 +1013,8 @@ class ModelBuilder extends Component {
                             <span className="InfoLegendItem filter">Link type</span>
                             <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
                             <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
-                            <span className="InfoLegendItem filter">Independence</span>
-                            <Checkbox label="Independent" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent}  />
+                            <span className="InfoLegendItem filter">Show Unlinked</span>
+                            <Checkbox label="Unlinked" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent} />
                           </Col>
                           <Col xs={6}>
                             <span className="InfoLegendItem filter">Link origin</span>
@@ -819,11 +1043,17 @@ class ModelBuilder extends Component {
                                 <Col xs={2}>
                                   <div className="LinksTo">Type</div>
                                   <div className="LinksTo">Origin</div>
+                                  <div className="LinksTo">Reference</div>
+                                  <div className="LinksTo">Model</div>
                                 </Col>
                                 <Col xs={8}>
                                   {influenceString}
                                   <br />
                                   {originString}
+                                  <br />
+                                  {referenceString}
+                                  <br />
+                                  {modelString}
                                 </Col>
                                 <Col xs={2} />
                               </Row>
@@ -834,11 +1064,18 @@ class ModelBuilder extends Component {
                           renderedLinksToNode.length > 0 && (
                             <div className="InfoLegendLinks">
                               <Row>
-                                <Col xs={2}>
+                                {/* <Col xs={2}>
                                   <div className="LinksTo">Links</div>
                                 </Col>
-                                <Col xs={8}>
+                                <Col xs={8} style={{maxHeight: "55px", overflow: "scroll"}}>
                                   {renderedLinksToNode}
+                                </Col>
+                                <Col xs={2} /> */}
+                                <Col xs={2}>
+                                  <div className="LinksTo">Origin</div>
+                                </Col>
+                                <Col xs={8}>
+                                  {renderedNodeReferences}
                                 </Col>
                                 <Col xs={2} />
                               </Row>

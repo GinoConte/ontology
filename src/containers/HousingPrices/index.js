@@ -2,11 +2,8 @@ import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Row, Container } from 'reactstrap'
 import AmCharts from '@amcharts/amcharts3-react';
-// import FlatButton from 'material-ui/FlatButton';
-import Divider from 'material-ui/Divider';
 import Paper from 'material-ui/Paper';
 import SelectField from 'material-ui/SelectField';
-import Slider from 'material-ui/Slider';
 import MenuItem from 'material-ui/MenuItem';
 import Checkbox from 'material-ui/Checkbox';
 

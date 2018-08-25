@@ -1,0 +1,55 @@
+Levels,No.,Variables,Start year,End year,Interval,Houses,Units,Source,Open access,Downloaded,Comments
+Sydney LGA variables,(1),Hedonic  prices,2000,2017,month,Yes,yes,Sirca,No,Yes,
+,(2),Median rents,2005,2017,month,Yes,yes,Sirca,No,Yes,
+,(3),Infrastructure invested,,,,,,,,,Later- detailed investment in each year
+,(4),Transport,N/A,,,,,,,,Not available- Database disability (https://data.nsw.gov.au/bureau-transport-statistics)
+,(5),Unemployment rate,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(6),Population growth,2001,2017,yearly,N/A,N/A,ABS,Yes,Yes,
+,(7),Household income,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(8),Crime rate,1995,2017,monthly,N/A,N/A,NSW Bureau of Crime Statistics and Research,Yes,Yes,
+,(9),Household formation,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(10),Housing supply,1991,2018,monthly,yes,yes,NSW planning&environment,Yes,Yes,
+,(11),Planning/Zoning policy,,,,,,,,,"Later- details for density, height, change year etc. "
+Sydney metropolitan (capital city) area variables,(12),Hedonic prices,1980,2017,quarter,yes,yes,ABS,Yes,Yes,
+,,Hedonic prices,1980,2018,monthly,yes,yes,Sirca,No,Yes,
+,(13),Median rents,2005,2017,monthly,yes,yes,Sirca,No,Yes,
+,(14),Unemployment rate,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(15),Household income,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(16),Population growth,2001,2017,yearly,N/A,N/A,ABS,Yes,Yes,
+,(17),No. of net migration,N/A,,,,,,,,Not available. But available at NSW level.
+,(18),No. of building permits,2001,2018,monthly,yes,yes,ABS; NSW planning&environment,Yes,Yes,
+,(19),Construction cost,1996,2018,monthly,N/A,N/A,ABS,Yes,Yes,Have Australia and NSW data
+,(20),Infrastructure invested,,,,,,,,,Later- detailed investment in each year
+,(21),Consumer confidence index,1948,2018,quarter,N/A,N/A,ABS,Yes,Yes,
+,(22),Auction clearance rate,N/A,,,,,,,,Not available- No public data (real estate Australian website)
+,(23),Price changes in other capital cities,2003,2017,monthly,N/A,N/A,ABS,Yes,Yes,
+,,Price changes in other capital cities,1980,2018,monthly,yes,yes,Sirca,No,Yes,
+,(24),Transport,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,Not available- Database disability (https://data.nsw.gov.au/bureau-transport-statistics)
+,(25),Crime rate,N/A,,,,,,,,Not available. But available at LGA level which can be used for calculating at Sydney level.
+,(26),Household formation,1996,2016,5 years,N/A,N/A,Census,Yes,Yes,Census data
+,(27),Quality of life,2012,2018,yearly,N/A,N/A,NUMBEO,Yes,Yes,https://www.numbeo.com/quality-of-life/rankings.jsp?title=2012-Q1
+,(28),Housing supply/land supply,1991,2017,yearly+monthly,yes,yes,NSW planning&environment,Yes,Yes,http://www.planning.nsw.gov.au/Research-and-Demography/Research/Housing-Monitor-Reports
+,(29),Planning/Zoning policy,,,,,,,,,"Later- details for density, height, change year etc. "
+NSW State level variables,(30),No. of net migration,2004,2015,yearly,N/A,N/A,ABS,Yes,Yes,
+,,No. of net migration,1981,2017,monthly,N/A,N/A,ABS,Yes,Yes,
+,(31),Population growth,1981,2017,quarter,N/A,N/A,ABS,Yes,Yes,
+,(32),Property tax,2007,2017,yearly,yes,yes,ABS,Yes,Yes,Property tax revenue
+,(33),Foreign investment,N/A,,,,,,,,Not available for NSW level data on real estate
+,(34),GDP growth,2002,2009,yearly,N/A,N/A,ABS,Yes,Yes,ABS only update till 2010
+,(35),Consumer confidence index,N/A,,,,,,,,Not available for state level data
+,(36),Household formation,1991,2016,yearly,N/A,N/A,ABS,Yes,Yes,https://profile.id.com.au/australia/
+,(37),Infrastructure invested,,,,,,,,,Later-detailed investment in each year  ( http://investment.infrastructure.gov.au/)
+National variables,(38),OCR rate,1990,2018,monthly,N/A,N/A,RBA,Yes,Yes,
+,(39),Variable rate,1976,2018,monthly,N/A,N/A,RBA (datastream),Yes,Yes,90 days bill rate
+,(40),Fixed rate,1976,2018,monthly,N/A,N/A,RBA (datastream),Yes,Yes,5/10 yrs bond yield
+,(41),Exchange rate,1991,2018,daily,N/A,N/A,RBA,Yes,Yes,
+,(42),Commodity prices,1982,2018,monthly,N/A,N/A,RBA,Yes,Yes,
+,(43),CPI,1948,2018,quarter,N/A,N/A,ABS,Yes,Yes,
+,(44),Property tax,2007,2017,yearly,yes,yes,ABS,Yes,Yes,
+,(45),Stock market price index,2002,2018,monthly,N/A,N/A,ASX,Yes,Yes,
+,(46),Bank mortgage lending,1975,2018,monthly,N/A,N/A,ABS,Yes,Yes,
+,(47),Macro prudential rules (LTV),,,,,,,,,Later-detailed policies in each year
+,(48),Foreign investment,1970,2016,yearly,N/A,N/A,UNCTADstat,Yes,Yes,
+,,Foreign investment,1988,2017,quarter,N/A,N/A,ABS (datastream),Yes,Yes,
+,(49),GDP,1960,2016,yearly,N/A,N/A,WorldBank,Yes,Yes,
+,(50),Consumer confidence index,1974,2018,monthly,N/A,N/A,OECD,Yes,Yes,
