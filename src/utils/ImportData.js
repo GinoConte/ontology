@@ -2,6 +2,7 @@ import { csv } from 'd3-fetch';
 import variableFile from './example2.csv';
 import linkFile from './links.csv';
 import referenceFile from './references.csv';
+import peopleFile from './people.csv';
 
 function ImportData(callback) {
   const graph = {
@@ -15,6 +16,11 @@ function ImportData(callback) {
     for (const datapoint in data) {
       const variable = data[datapoint];
 
+      //spelling corrections
+      if (variable["Concept 2"] === 'Macroeconomiucs') {
+        variable["Concept 2"] = 'Macroeconomics';
+      }
+
       if (variable.name) {
         graph.nodes.push({
           id: variable["variable ID"],
@@ -24,7 +30,7 @@ function ImportData(callback) {
           concept_2: variable["Concept 2"] || '',
           concept_3: variable["Concept 3"] || '',
           value: 1,
-
+          color: "rgba(11, 179, 214, 1)",
         });
 
         if (graph.concepts.indexOf(variable["Concept 1"]) === -1) {
@@ -88,6 +94,7 @@ function ImportReferences(callback) {
         references.push({
           id: reference.ID,
           item: reference.Item,
+          authors: reference['Authors ID'],
         });
       }
     }
@@ -95,4 +102,23 @@ function ImportReferences(callback) {
   });
 }
 
-export { ImportData, ImportReferences };
+function ImportPeople(callback) {
+  const people = [];
+  csv(peopleFile).then(function(data) {
+    for (const datapoint in data) {
+      const person = data[datapoint];
+      if (person['People ID']) {
+        people.push({
+          id: person['People ID'],
+          fullName: person['Full name'],
+          fname: person['First Name'],
+          lname: person['Last Name'],
+          affiliation: person.Affiliation,
+        });
+      }
+    }
+    return callback(people) || null;
+  });
+}
+
+export { ImportData, ImportReferences, ImportPeople };

@@ -28,7 +28,7 @@ import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 
-import { ImportData, ImportReferences } from '../../utils/ImportData';
+import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
 
 // graph payload (with minimalist structure)
 const data = {
@@ -145,6 +145,8 @@ class ModelBuilder extends Component {
       isCheckedOpinion: true,
       isCheckedReference: true,
       isCheckedIndependent: true,
+      isCheckedDependent: true,
+      isReferenceModalOpen: false,
       weightValues: {
         // Conversation: 0.5,
       },
@@ -160,6 +162,7 @@ class ModelBuilder extends Component {
     this.getNodeFromName = this.getNodeFromName.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
     this.getReferenceFromID = this.getReferenceFromID.bind(this);
+    this.getAuthorsFromIDs = this.getAuthorsFromIDs.bind(this);
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleConceptChange = this.handleConceptChange.bind(this);
@@ -176,6 +179,7 @@ class ModelBuilder extends Component {
     this.handleNewLinkInputChange = this.handleNewLinkInputChange.bind(this);
     this.toggleEditLink = this.toggleEditLink.bind(this);
     this.submitEditLink = this.submitEditLink.bind(this);
+    this.toggleReferenceModal = this.toggleReferenceModal.bind(this);
 
     //input
     this.handleNewVariableInputChange = this.handleNewVariableInputChange.bind(this);
@@ -187,6 +191,7 @@ class ModelBuilder extends Component {
     this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
     this.handleCheckedReference = this.handleCheckedReference.bind(this);
     this.handleCheckedIndependent = this.handleCheckedIndependent.bind(this);
+    this.handleCheckedDependent = this.handleCheckedDependent.bind(this);
 
     //weight form
     this.handleWeightVariableChange = this.handleWeightVariableChange.bind(this);
@@ -211,6 +216,12 @@ class ModelBuilder extends Component {
     ImportReferences(references => {
       this.setState({
         references,
+      });
+    });
+
+    ImportPeople(people => {
+      this.setState({
+        people,
       });
     });
     
@@ -269,6 +280,21 @@ class ModelBuilder extends Component {
       }
     }
     return referencesFound;
+  }
+
+  getAuthorsFromIDs(authorsString = '') {
+    const authorsToFind = authorsString.replace(' ', '').split(',');
+    const authorsFound = [];
+    const { people } = this.state;
+    for (const authorToFind in authorsToFind) {
+      for (const person in people) {
+        if (authorsToFind[authorToFind] === people[person].id) {
+          authorsFound.push(people[person]);
+        }
+      }
+    }
+    console.log('found', authorsFound);
+    return authorsFound;
   }
 
   handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
@@ -440,6 +466,58 @@ class ModelBuilder extends Component {
     });
   }
 
+  handleCheckedDependent() {
+    const { data } = this.state;
+    let newData = {};
+    const linksToRemove = [];
+    if (this.state.isCheckedDependent) {
+      newData = {
+        nodes: data.nodes.filter(node => {
+          let isDependent = false;
+          for (const link in data.links) {
+            if (node.id === data.links[link].target.id) {
+              isDependent = true;
+            }
+          }
+          return isDependent;
+        }),
+        links: [...data.links],
+        removedNodesIndependent: data.nodes.filter(node => {
+          let isIndependent = true;
+          for (const link in data.links) {
+            if (node.id === data.links[link].target.id) {
+              linksToRemove.push(data.links[link]);
+              isIndependent = false;
+            }
+          }
+          return isIndependent;
+        }),
+        links: data.links.filter(link => {
+          let shouldRemoveLink = false;
+          for (const linkToRemove in linksToRemove) {
+            if (link.source.id === linksToRemove[linkToRemove].source.id && link.target.id === linksToRemove[linkToRemove].target.id) {
+              shouldRemoveLink = true;
+            }
+          }
+          return !shouldRemoveLink;
+        }),
+        removedLinksIndependent: linksToRemove,
+      }
+    } else {
+      newData = {
+        nodes: [...data.nodes, ...data.removedNodesIndependent],
+        links: [...data.links, ...data.removedLinksIndependent],
+        removedNodesIndependent: [],
+        removedLinksIndependent: [],
+      }
+    }
+
+    this.setState({
+      isCheckedDependent: !this.state.isCheckedDependent,
+      data: newData,
+    });
+  }
+
   handleCheckedHypothesis() {
     this.setState({ isCheckedHypothesis: !this.state.isCheckedHypothesis });
   }
@@ -594,6 +672,10 @@ class ModelBuilder extends Component {
     this.setState({ isEditLinkOpen: !this.state.isEditLinkOpen });
   }
 
+  toggleReferenceModal() {
+    this.setState({ isReferenceModalOpen: !this.state.isReferenceModalOpen });
+  }
+
   render() {
 
     const {
@@ -704,9 +786,35 @@ class ModelBuilder extends Component {
     let renderedNodeReferences;
     if (selectedNodeReferences) {
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
+        const authors = this.getAuthorsFromIDs(reference.authors) || [];
+        const renderedAuthors = authors.map((author, index) => {
+          return (
+            <span>{author.fullName}{author.affiliation && ` (${author.affiliation})`}{index < (authors.length - 1) && ' & '}</span>
+          );
+        });
+        console.log('rendered', renderedAuthors);
         return (
-          <div style={{fontSize:'12px',textAlign:'left',}}>
+          <div className="NodeReference" onClick={this.toggleReferenceModal}>
             <span style={{textDecoration: 'underline'}}>{reference.id}:</span><span>&nbsp;{reference.item}</span>
+            <Dialog
+              title="Reference Details"
+              actions={editLinkActions}
+              modal={false}
+              open={this.state.isReferenceModalOpen}
+              onRequestClose={this.toggleReferenceModal}
+            >
+              <div className="ModalContent">
+                <p><i>{reference.item}</i></p>
+                <p>ID: {reference.id}</p>
+                { 
+                  renderedAuthors.length > 0 && (
+                    <div>
+                      <p>Authors: {renderedAuthors}</p>
+                    </div>
+                  )
+                }
+              </div>
+            </Dialog>
           </div>
         );
       });
@@ -754,37 +862,43 @@ class ModelBuilder extends Component {
       }
     });
 
+    //apply styling to nodes based on different properties
+    data.nodes.forEach((node, index) => {
+      if (data.nodes.length < 30) {
+        // node.value = 5;
+      }
+    });
     //future 'hide independent variables' feature?
-    if (!this.state.isCheckedIndependent) {
-      data.nodes.forEach((node, nodeIndex) => {
-        filteredData.links.forEach((link, linkIndex) => {
-          if (link.source.id === node.id || link.target.id === node.id) {
-            //check if id exists
-            if (filteredData.nodes.indexOf(node.id) > -1) {
-            } else {
-              filteredData.nodes.push({
-                id: node.id,
-                name: node.name,
-                // name: numLinks[node.id] > 2 ? node.name : ' ',
-                renderLabel: numLinks[node.id] > 1 ? true : false,
-                size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
-              });
-            }
-          }
-        });
-      });
-    } else {
-      data.nodes.forEach((node, index) => {
-        filteredData.nodes.push({
-          id: node.id,
-          name: node.name,
-          // name: numLinks[node.id] > 2 ? node.name : ' ',
-          renderLabel: numLinks[node.id] > 1 ? true : false,
-          size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
-        });
-      });
-      // filteredData.nodes = data.nodes;
-    }
+    // if (!this.state.isCheckedIndependent) {
+    //   data.nodes.forEach((node, nodeIndex) => {
+    //     filteredData.links.forEach((link, linkIndex) => {
+    //       if (link.source.id === node.id || link.target.id === node.id) {
+    //         //check if id exists
+    //         if (filteredData.nodes.indexOf(node.id) > -1) {
+    //         } else {
+    //           filteredData.nodes.push({
+    //             id: node.id,
+    //             name: node.name,
+    //             // name: numLinks[node.id] > 2 ? node.name : ' ',
+    //             renderLabel: numLinks[node.id] > 1 ? true : false,
+    //             size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
+    //           });
+    //         }
+    //       }
+    //     });
+    //   });
+    // } else {
+    //   data.nodes.forEach((node, index) => {
+    //     filteredData.nodes.push({
+    //       id: node.id,
+    //       name: node.name,
+    //       // name: numLinks[node.id] > 2 ? node.name : ' ',
+    //       renderLabel: numLinks[node.id] > 1 ? true : false,
+    //       size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
+    //     });
+    //   });
+    //   // filteredData.nodes = data.nodes;
+    // }
 
     //if empty, display the knowledge pack
     if (filteredData.nodes.length < 1) {
@@ -920,44 +1034,82 @@ class ModelBuilder extends Component {
     //   );
     // });
 
-    const renderedForceGraph = (
+    let renderedForceGraph = (
       <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
-        <ForceGraph2D
-          enableNodeDrag
-          graphData={data}
-          linkCurvature={0}
-          width={1000}
-          linkWidth="2"
-          nodeLabel="name"
-          backgroundColor="transparent"
-          linkDirectionalParticles={1}
-          onNodeClick={this.handleNodeClick}
-        />
+          <ForceGraph2D
+            enableNodeDrag
+            graphData={data}
+            linkCurvature={0}
+            nodeResolution={16}
+            linkResolution={16}
+            width={1000}
+            linkWidth="2"
+            nodeLabel="name"
+            linkLabel="linkOrigin"
+            backgroundColor="transparent"
+            linkDirectionalParticles={1}
+            onNodeClick={this.handleNodeClick}
+            nodeCanvasObject={(node, ctx, globalScale) => {
+              let label = node.name;
+              const fontSize = 12/globalScale;
+              ctx.font = `${fontSize}px Sans-Serif`;
+              const textWidth = ctx.measureText(label).width;
+              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+              ctx.fillStyle = node.color;
+              // ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+              ctx.beginPath();
+              ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
+              ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
+              ctx.fill();
+              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 5) {
+                if (this.getLinksToNode(node.id).length > 5 && label.length > 20) {
+                  label = label.slice(0,20) + '...';
+                }
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = "black";
+                ctx.fillText(label, node.x, node.y - 5);
+              }
+            }}
+          />
+        }
       </div>
-      // <InteractiveForceGraph
-      //   highlightDependencies
-      //   zoom
-      //   zoomOptions={ { zoomSpeed: 0.03 } }
-      //   labelAttr="name"
-      //   onSelectNode={this.handleNodeClick}
-      //   simulationOptions={{ 
-      //     animate: true,
-      //     height: 500,
-      //     width: 1000,
-      //     radiusMargin: 5,
-      //     // alpha: 1,
-      //     // alphaDecay: 0.001,
-      //     // alphaTarget: 0.9,
-      //     // alphaMin: 0.1,
-      //     // alpha: 3,
-      //   }}
-      //   ref={(el) => this.forceGraphRef = el}
-      //   opacityFactor={0.4}
-      // >
-      //   {renderedForceGraphNodes}
-      //   {renderedForceGraphLinks}
-      // </InteractiveForceGraph>
     );
+
+    // if (data.nodes.length < 30) {
+    //   renderedForceGraph = (
+    //     <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
+    //         <ForceGraph2D
+    //           enableNodeDrag
+    //           graphData={data}
+    //           linkCurvature={0}
+    //           width={1000}
+    //           linkWidth="2"
+    //           nodeLabel="name"
+    //           backgroundColor="transparent"
+    //           linkDirectionalParticles={1}
+    //           onNodeClick={this.handleNodeClick}
+    //           nodeCanvasObject={(node, ctx, globalScale) => {
+    //             const label = node.name;
+    //             const fontSize = 12/globalScale;
+    //             ctx.font = `${fontSize}px Sans-Serif`;
+    //             const textWidth = ctx.measureText(label).width;
+    //             const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
+    //             ctx.fillStyle = node.color;
+    //             // ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
+    //             ctx.beginPath();
+    //             ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
+    //             ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
+    //             ctx.fill();
+    //             ctx.textAlign = 'center';
+    //             ctx.textBaseline = 'middle';
+    //             ctx.fillStyle = "black";
+    //             ctx.fillText(label, node.x, node.y - 5);
+    //           }}
+    //         />
+    //     </div>
+    //   );
+    // }
 
     const renderedConceptDropdownItems = data.concepts ? data.concepts.map((concept, index) => {
       return <MenuItem value={index + 2} primaryText={concept} />
@@ -966,6 +1118,7 @@ class ModelBuilder extends Component {
     return (
       <React.Fragment>
         <Container className="Container" style={{minWidth: "960px"}}>
+          <div className="GraphBackground" />
           {renderedTokenRedirect}
           <Row>
             {/* <Col xs={12}>
@@ -1092,6 +1245,8 @@ class ModelBuilder extends Component {
                               <Checkbox label="Model" checked={this.state.isCheckedModel} onCheck={this.handleCheckedModel} />
                               <Checkbox label="Reference" checked={this.state.isCheckedReference} onCheck={this.handleCheckedReference} />
                               <Checkbox label="Opinion" checked={this.state.isCheckedOpinion} onCheck={this.handleCheckedOpinion} />
+                              <span className="InfoLegendItem filter">Dependence</span>
+                              <Checkbox label="Independent" checked={this.state.isCheckedDependent} onCheck={this.handleCheckedDependent} />
                             </Col>
                           </Row>
                         </div>
@@ -1132,7 +1287,7 @@ class ModelBuilder extends Component {
                             )
                           }
                           {
-                            renderedLinksToNode.length > 0 && (
+                            renderedNodeReferences && renderedNodeReferences.length > 0 && (
                               <div className="InfoLegendLinks">
                                 <Row>
                                   {/* <Col xs={2}>

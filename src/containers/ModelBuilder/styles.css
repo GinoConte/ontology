@@ -19,6 +19,20 @@
   background-color: #eceeef !important;
 }
 
+.GraphBackground {
+  background-color: #fff9e5;
+  width: 1140px;
+  height: calc(100% + 300px);
+  position: absolute;
+  z-index: -1000;
+}
+
+@media (max-width: 1200px) {
+  .GraphBackground {
+    width: 960px;
+  }
+}
+
 .Content {
   margin-top: 25px;
 }
@@ -185,6 +199,19 @@
 
 .CreateNodeInput {
   margin: 0 15px;
+}
+
+.NodeReference {
+  font-size: 12px;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 3px;
+}
+
+.NodeReference:hover {
+  background-color: rgba(255,255,255,0.3);
+  transition: 0.3s;
 }
 
 .WeightForm {
