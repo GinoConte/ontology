@@ -7,8 +7,18 @@ import Paper from 'material-ui/Paper';
 import SelectField from 'material-ui/SelectField';
 import Checkbox from 'material-ui/Checkbox';
 import './styles.css';
-import { Graph } from 'react-d3-graph';
-import { InteractiveForceGraph, ForceGraphNode, ForceGraphArrowLink, ForceGraphLink, updateSimulation, runSimulation, createSimulation } from 'react-vis-force';
+// import { Graph } from 'react-d3-graph';
+// import { 
+//   InteractiveForceGraph,
+//   ForceGraph,
+//   ForceGraphNode,
+//   ForceGraphArrowLink,
+//   ForceGraphLink,
+//   updateSimulation,
+//   runSimulation,
+//   createSimulation
+// } from 'react-vis-force';
+import { ForceGraph2D, ForceGraph3D, ForceGraphVR } from 'react-force-graph';
 import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
@@ -210,14 +220,14 @@ class ModelBuilder extends Component {
     e.preventDefault();
     if (this.state.newVariableInput.length > 0) {
       const { data } = this.state;
-      data.nodes.push({
-        id: 'new node' + data.nodes.length,
-        name: this.state.newVariableInput,
-      });
+      const newData = {
+        nodes: [...data.nodes, { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 }],
+        links: [...data.links],
+      }
       this.setState({
-        data,
+        data: newData,
         newVariableInput: '',
-        alpha: this.state.alpha + 1,
+        // alpha: this.state.alpha + 1,
       })
     };
   }
@@ -240,7 +250,7 @@ class ModelBuilder extends Component {
     const links = this.state.data.links;
     const linksWithNode = [];
     for (let link of links) {
-      if (link.target === nodeID || link.source === nodeID) {
+      if (link.target.id === nodeID || link.source.id === nodeID) {
         linksWithNode.push(link);
       }
     }
@@ -305,10 +315,10 @@ class ModelBuilder extends Component {
     });
   };
 
-  handleNodeClick(event, clickedNode) {
+  handleNodeClick(clickedNode) {
     console.log('node clicked', clickedNode);
     const nodes = this.state.data.nodes;
-    const selectedNode = nodes.find(function (node) { return clickedNode.id === node.id; });
+    const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
     this.setState({
       selectedNodeID: selectedNode.id,
       selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
@@ -317,8 +327,7 @@ class ModelBuilder extends Component {
       selectedLinkType: '',
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
-      shouldSimulate: true,
-      selectedNodeLinks: this.getLinksToNode(clickedNode.id),
+      selectedNodeLinks: this.getLinksToNode(selectedNode.id),
     });
   }
 
@@ -384,11 +393,51 @@ class ModelBuilder extends Component {
   }
 
   handleCheckedCausal() {
-    this.setState({ isCheckedCausal: !this.state.isCheckedCausal });
+    const { data } = this.state;
+    let newData = {}
+
+    if (this.state.isCheckedCausal) {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.links.filter(link => link.linkType !== 'Causal'),
+        removedLinksCausal: data.links.filter(link => link.linkType === 'Causal'),
+      }
+    } else {
+      newData = {
+        nodes: [...data.nodes],
+        links: [...data.links, ...data.removedLinksCausal],
+        removedLinksCausal: [],
+      }
+    }
+
+    this.setState({
+      isCheckedCausal: !this.state.isCheckedCausal,
+      data: newData,
+    });
   }
 
   handleCheckedIndependent() {
-    this.setState({ isCheckedIndependent: !this.state.isCheckedIndependent });
+    const { data } = this.state;
+    let newData = {}
+
+    if (this.state.isCheckedIndependent) {
+      newData = {
+        nodes: data.nodes.filter(node => this.getLinksToNode(node.id).length > 0),
+        links: [...data.links],
+        removedNodesUnlinked: data.nodes.filter(node => this.getLinksToNode(node.id).length === 0),
+      }
+    } else {
+      newData = {
+        nodes: [...data.nodes, ...data.removedNodesUnlinked],
+        links: [...data.links],
+        removedNodesUnlinked: [],
+      }
+    }
+
+    this.setState({
+      isCheckedIndependent: !this.state.isCheckedIndependent,
+      data: newData,
+    });
   }
 
   handleCheckedHypothesis() {
@@ -709,7 +758,7 @@ class ModelBuilder extends Component {
     if (!this.state.isCheckedIndependent) {
       data.nodes.forEach((node, nodeIndex) => {
         filteredData.links.forEach((link, linkIndex) => {
-          if (link.source === node.id || link.target === node.id) {
+          if (link.source.id === node.id || link.target.id === node.id) {
             //check if id exists
             if (filteredData.nodes.indexOf(node.id) > -1) {
             } else {
@@ -825,361 +874,384 @@ class ModelBuilder extends Component {
     }
 
     // render the graph
-    const renderedForceGraphNodes = data.nodes.map(node => {
-      let colorPercentage = numLinks[node.id] * 5 > 100 ? 100 : numLinks[node.id] * 3;
-      if (!numLinks[node.id]) {
-        colorPercentage = 1;
-      }
-      const color = hsl_col_perc(colorPercentage, 190, 200);
-      let renderedNode = (
-        <ForceGraphNode
-          // fill="rgba(30, 210, 235, 1)"
-          fill={color}
-          node={ { id: node.id, name: node.name, radius: 3, } }
-        />
-      );
-      if (numLinks[node.id] > 5) {
-        renderedNode = (
-          <ForceGraphNode
-            fill={color}
-            // size="200"
-            // showLabel
-            node={ { id: node.id, name: node.name, radius: 3, } }
-          />
-        );
-      }
-      if (data.nodes.length < 30) {
-        renderedNode = (
-          <ForceGraphNode
-            fill={color}
-            showLabel
-            node={ { id: node.id, name: node.name, radius: 3, } }
-          />
-        );
-      }
-      return renderedNode;
-    });
+    // const renderedForceGraphNodes = data.nodes.map(node => {
+    //   let colorPercentage = numLinks[node.id] * 5 > 100 ? 100 : numLinks[node.id] * 3;
+    //   if (!numLinks[node.id]) {
+    //     colorPercentage = 1;
+    //   }
+    //   const color = hsl_col_perc(colorPercentage, 190, 200);
+    //   let renderedNode = (
+    //     <ForceGraphNode
+    //       // fill="rgba(30, 210, 235, 1)"
+    //       fill={color}
+    //       node={ { id: node.id, name: node.name, radius: 3, } }
+    //     />
+    //   );
+    //   if (numLinks[node.id] > 5) {
+    //     renderedNode = (
+    //       <ForceGraphNode
+    //         fill={color}
+    //         // size="200"
+    //         // showLabel
+    //         node={ { id: node.id, name: node.name, radius: 3, } }
+    //       />
+    //     );
+    //   }
+    //   if (data.nodes.length < 30) {
+    //     renderedNode = (
+    //       <ForceGraphNode
+    //         fill={color}
+    //         showLabel
+    //         node={ { id: node.id, name: node.name, radius: 3, } }
+    //       />
+    //     );
+    //   }
+    //   return renderedNode;
+    // });
 
-    const renderedForceGraphLinks = data.links.map(link => {
-      return (
-        <ForceGraphArrowLink
-          stroke={link.linkType === 'Causal' ? 'rgba(131, 198, 72, 0.8)' : 'rgba(228, 82, 75, 0.8)'}
-          targetRadius="1"
-          onClick={(e) => console.log('hello', e)}
-          link={ { source: link.source, target: link.target, value: 1 } }
-        />
-      );
-    });
+    // const renderedForceGraphLinks = data.links.map(link => {
+    //   return (
+    //     <ForceGraphArrowLink
+    //       stroke={link.linkType === 'Causal' ? 'rgba(131, 198, 72, 0.8)' : 'rgba(228, 82, 75, 0.8)'}
+    //       targetRadius="1"
+    //       onClick={(e) => console.log('hello', e)}
+    //       link={ { source: link.source, target: link.target, value: 1 } }
+    //     />
+    //   );
+    // });
 
     const renderedForceGraph = (
-      <InteractiveForceGraph
-        highlightDependencies
-        zoom
-        zoomOptions={ { zoomSpeed: 0.03 } }
-        labelAttr="name"
-        onSelectNode={this.handleNodeClick}
-        simulationOptions={{ 
-          animate: true,
-          height: 500,
-          width: 1000,
-          radiusMargin: 5,
-          // alpha: 1,
-          // alphaDecay: 0.001,
-          // alphaTarget: 0.9,
-          // alphaMin: 0.1,
-          // alpha: 3,
-        }}
-        ref={(el) => this.forceGraphRef = el}
-        opacityFactor={0.4}
-      >
-        {renderedForceGraphNodes}
-        {renderedForceGraphLinks}
-      </InteractiveForceGraph>
-    )
+      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
+        <ForceGraph2D
+          enableNodeDrag
+          graphData={data}
+          linkCurvature={0}
+          width={1000}
+          linkWidth="2"
+          nodeLabel="name"
+          backgroundColor="transparent"
+          linkDirectionalParticles={1}
+          onNodeClick={this.handleNodeClick}
+        />
+      </div>
+      // <InteractiveForceGraph
+      //   highlightDependencies
+      //   zoom
+      //   zoomOptions={ { zoomSpeed: 0.03 } }
+      //   labelAttr="name"
+      //   onSelectNode={this.handleNodeClick}
+      //   simulationOptions={{ 
+      //     animate: true,
+      //     height: 500,
+      //     width: 1000,
+      //     radiusMargin: 5,
+      //     // alpha: 1,
+      //     // alphaDecay: 0.001,
+      //     // alphaTarget: 0.9,
+      //     // alphaMin: 0.1,
+      //     // alpha: 3,
+      //   }}
+      //   ref={(el) => this.forceGraphRef = el}
+      //   opacityFactor={0.4}
+      // >
+      //   {renderedForceGraphNodes}
+      //   {renderedForceGraphLinks}
+      // </InteractiveForceGraph>
+    );
 
     const renderedConceptDropdownItems = data.concepts ? data.concepts.map((concept, index) => {
       return <MenuItem value={index + 2} primaryText={concept} />
     }) : null;
 
     return (
-      <Container className="Container" style={{minWidth: "960px"}}>
-        {renderedTokenRedirect}
-        <Row>
-          {/* <Col xs={12}>
-            <h1>Ontology</h1>
-          </Col> */}
-          <Col xs={12}>
-            <div className="GraphContainer" style={{background: "#fff9e5"}}>
-              <div className="GraphControls">
-                <Toolbar className="GraphToolbar">
-                  <ToolbarGroup firstChild={true}>
-                    <a href="/categories">
-                      <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Housing Prices" />
-                    </a>
-                    <ToolbarSeparator />
-                    <ToolbarTitle className="ToolbarTitle" text="Concept:" />
-                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.conceptValue} onChange={this.handleConceptChange}>
-                      <MenuItem value={1} primaryText="All" />
-                      {renderedConceptDropdownItems}
-                    </DropDownMenu>
-                  </ToolbarGroup>
-                  <ToolbarGroup>
-                    {/* <ToolbarTitle text="Options" /> */}
-                    {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
-                    {/* <ToolbarSeparator />
-                    <ToolbarTitle className="ToolbarTitle" text="Activities:" />
-                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
-                      <MenuItem value={1} primaryText="Explore Variables" />
-                      <MenuItem value={2} primaryText="Model Builder" />
-                      <MenuItem value={3} primaryText="View datasets" />
-                      <MenuItem value={4} primaryText="Social Growth" />
-                      <MenuItem value={5} primaryText="Monthly Active Users" />
-                    </DropDownMenu> */}
-                  </ToolbarGroup>
-                  <ToolbarGroup>
-                    {/* <ToolbarTitle text="Options" /> */}
-                    {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
-                    <ToolbarSeparator />
-                    <RaisedButton
-                      label="Animate"
-                      onClick={this.handleSimulate}
-                      primary={!this.state.shouldSimulate} 
-                    />
-                    {/* <Checkbox label="Interest" /> */}
-                  </ToolbarGroup>
-                </Toolbar>
-                {/* <FlatButton label="Pause" />
-                <FlatButton label="Simulate" /> */}
-              </div>
-              <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
-                <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
-                  <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
-                  <br />
-                  <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
-                </Col>     
-              </Paper>
-              {renderedForceGraph}
-              {/* <Graph
-                id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
-                data={filteredData}
-                config={myConfig}
-                onClickNode={this.handleNodeClick}
-                onClickLink={this.handleLinkClick}
-                onMouseOverNode={onMouseOverNode}
-                onMouseOutNode={onMouseOutNode}
-                onMouseOverLink={onMouseOverLink}
-                onMouseOutLink={onMouseOutLink}
-              /> */}
-              <div className="InfoContainer">
-                <Row>
-                  <Col xs={8}>
-                    <div className="CreateNode">
-                      {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
-                      <form onSubmit={this.addNewNode}>
-                        <TextField
-                          // hintText="Variable name"
-                          className="CreateNodeInput"
-                          floatingLabelText="New variable name"
-                          value={newVariableInput}
-                          onChange={this.handleNewVariableInputChange}
-                          onSubmit={this.addNewNode}
-                        /> 
-                        {/* <RaisedButton
-                          label="Create Variable"
-                          // onClick={this.handleAddVariable}
-                          primary={true} 
-                        />     */}
-                        <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
-                      </form>
-                    </div>
-                  </Col>
-                  <Col xs={4}>
-                    <div className="SaveEdits">
+      <React.Fragment>
+        <Container className="Container" style={{minWidth: "960px"}}>
+          {renderedTokenRedirect}
+          <Row>
+            {/* <Col xs={12}>
+              <h1>Ontology</h1>
+            </Col> */}
+            <Col xs={12}>
+              <div className="GraphContainer" style={{background: "#fff9e5"}}>
+                <div className="GraphControls">
+                  <Toolbar className="GraphToolbar">
+                    <ToolbarGroup firstChild={true}>
+                      <a href="/categories">
+                        <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Housing Prices" />
+                      </a>
+                      <ToolbarSeparator />
+                      <ToolbarTitle className="ToolbarTitle" text="Concept:" />
+                      <DropDownMenu className="ToolbarTitle dropdown" value={this.state.conceptValue} onChange={this.handleConceptChange}>
+                        <MenuItem value={1} primaryText="All" />
+                        {renderedConceptDropdownItems}
+                      </DropDownMenu>
+                    </ToolbarGroup>
+                    <ToolbarGroup>
+                      {/* <ToolbarTitle text="Options" /> */}
+                      {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
+                      {/* <ToolbarSeparator />
+                      <ToolbarTitle className="ToolbarTitle" text="Activities:" />
+                      <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
+                        <MenuItem value={1} primaryText="Explore Variables" />
+                        <MenuItem value={2} primaryText="Model Builder" />
+                        <MenuItem value={3} primaryText="View datasets" />
+                        <MenuItem value={4} primaryText="Social Growth" />
+                        <MenuItem value={5} primaryText="Monthly Active Users" />
+                      </DropDownMenu> */}
+                    </ToolbarGroup>
+                    <ToolbarGroup>
+                      {/* <ToolbarTitle text="Options" /> */}
+                      {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
+                      <ToolbarSeparator />
                       <RaisedButton
-                        label="Save To Knowledge Base"
-                        onClick={this.onSaveToKB}
-                        primary={true} 
+                        label="Animate"
+                        onClick={this.handleSimulate}
+                        primary={!this.state.shouldSimulate} 
                       />
-                    </div>
-                  </Col>
-                </Row>
-                <Paper className="InfoContainerPaper" zDepth={1}>
+                      {/* <Checkbox label="Interest" /> */}
+                    </ToolbarGroup>
+                  </Toolbar>
+                  {/* <FlatButton label="Pause" />
+                  <FlatButton label="Simulate" /> */}
+                </div>
+                <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
+                  <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
+                    <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
+                    <br />
+                    <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
+                  </Col>     
+                </Paper>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+        {renderedForceGraph}
+        <Container>
+          <Row>
+            <Col>
+              <div>
+                {/* <Graph
+                  id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
+                  data={filteredData}
+                  config={myConfig}
+                  onClickNode={this.handleNodeClick}
+                  onClickLink={this.handleLinkClick}
+                  onMouseOverNode={onMouseOverNode}
+                  onMouseOutNode={onMouseOutNode}
+                  onMouseOverLink={onMouseOverLink}
+                  onMouseOutLink={onMouseOutLink}
+                /> */}
+                <div className="InfoContainer">
                   <Row>
-                    <Col xs={4}>
-                      <div className="InfoLegend">
-                        <div className="InfoLegendTitle">Filters</div>
-                        <Row>
-                          <Col xs={6}>
-                            <span className="InfoLegendItem filter">Link type</span>
-                            <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
-                            <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
-                            <span className="InfoLegendItem filter">Show Unlinked</span>
-                            <Checkbox label="Unlinked" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent} />
-                          </Col>
-                          <Col xs={6}>
-                            <span className="InfoLegendItem filter">Link origin</span>
-                            <Checkbox label="Model" checked={this.state.isCheckedModel} onCheck={this.handleCheckedModel} />
-                            <Checkbox label="Reference" checked={this.state.isCheckedReference} onCheck={this.handleCheckedReference} />
-                            <Checkbox label="Opinion" checked={this.state.isCheckedOpinion} onCheck={this.handleCheckedOpinion} />
-                          </Col>
-                        </Row>
+                    <Col xs={8}>
+                      <div className="CreateNode">
+                        {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
+                        <form onSubmit={this.addNewNode}>
+                          <TextField
+                            // hintText="Variable name"
+                            className="CreateNodeInput"
+                            floatingLabelText="New variable name"
+                            value={newVariableInput}
+                            onChange={this.handleNewVariableInputChange}
+                            onSubmit={this.addNewNode}
+                          /> 
+                          {/* <RaisedButton
+                            label="Create Variable"
+                            // onClick={this.handleAddVariable}
+                            primary={true} 
+                          />     */}
+                          <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
+                        </form>
                       </div>
                     </Col>
-                    <Col xs={1} />
-                    <Col xs={6}>
-                      <div className="InfoLegend">
-                        <div className="InfoLegendTitle selection">
-                          { selectedType ? `${selectedTitle}` : 'Nothing selected'}
+                    <Col xs={4}>
+                      <div className="SaveEdits">
+                        <RaisedButton
+                          label="Save To Knowledge Base"
+                          onClick={this.onSaveToKB}
+                          primary={true} 
+                        />
+                      </div>
+                    </Col>
+                  </Row>
+                  <Paper className="InfoContainerPaper" zDepth={1}>
+                    <Row>
+                      <Col xs={4}>
+                        <div className="InfoLegend">
+                          <div className="InfoLegendTitle">Filters</div>
+                          <Row>
+                            <Col xs={6}>
+                              <span className="InfoLegendItem filter">Link type</span>
+                              <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
+                              <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
+                              <span className="InfoLegendItem filter">Show Unlinked</span>
+                              <Checkbox label="Unlinked" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent} />
+                            </Col>
+                            <Col xs={6}>
+                              <span className="InfoLegendItem filter">Link origin</span>
+                              <Checkbox label="Model" checked={this.state.isCheckedModel} onCheck={this.handleCheckedModel} />
+                              <Checkbox label="Reference" checked={this.state.isCheckedReference} onCheck={this.handleCheckedReference} />
+                              <Checkbox label="Opinion" checked={this.state.isCheckedOpinion} onCheck={this.handleCheckedOpinion} />
+                            </Col>
+                          </Row>
+                        </div>
+                      </Col>
+                      <Col xs={1} />
+                      <Col xs={6}>
+                        <div className="InfoLegend">
+                          <div className="InfoLegendTitle selection">
+                            { selectedType ? `${selectedTitle}` : 'Nothing selected'}
+                            {
+                              selectedType && (
+                                <div className="InfoLegendItem type">{`${selectedType}`}</div>
+                              )
+                            }
+                          </div>
                           {
-                            selectedType && (
-                              <div className="InfoLegendItem type">{`${selectedType}`}</div>
+                            selectedType === 'Link' && (
+                              <div className="InfoLegendLinks">
+                                <Row>
+                                  <Col xs={2}>
+                                    <div className="LinksTo">Type</div>
+                                    <div className="LinksTo">Origin</div>
+                                    <div className="LinksTo">Reference</div>
+                                    <div className="LinksTo">Model</div>
+                                  </Col>
+                                  <Col xs={8}>
+                                    {influenceString}
+                                    <br />
+                                    {originString}
+                                    <br />
+                                    {referenceString}
+                                    <br />
+                                    {modelString}
+                                  </Col>
+                                  <Col xs={2} />
+                                </Row>
+                              </div>
+                            )
+                          }
+                          {
+                            renderedLinksToNode.length > 0 && (
+                              <div className="InfoLegendLinks">
+                                <Row>
+                                  {/* <Col xs={2}>
+                                    <div className="LinksTo">Links</div>
+                                  </Col>
+                                  <Col xs={8} style={{maxHeight: "55px", overflow: "scroll"}}>
+                                    {renderedLinksToNode}
+                                  </Col>
+                                  <Col xs={2} /> */}
+                                  <Col xs={2}>
+                                    <div className="LinksTo">Origin</div>
+                                  </Col>
+                                  <Col xs={8}>
+                                    {renderedNodeReferences}
+                                  </Col>
+                                  <Col xs={2} />
+                                </Row>
+                              </div>
+                            )
+                          }
+                          { 
+                            selectedType === 'Variable' && (
+                              <div className="InfoLegendButton">
+                                {/* <RaisedButton
+                                  label="Add to model"
+                                  onClick={this.handleAddVariable}
+                                  primary={true} 
+                                /> */}
+                                <RaisedButton
+                                  label="Add Link"
+                                  onClick={this.toggleEditLink}
+                                  primary={true} 
+                                />
+                                <Dialog
+                                  title="Create a new link"
+                                  actions={editLinkActions}
+                                  modal={false}
+                                  open={this.state.isEditLinkOpen}
+                                  onRequestClose={this.toggleEditLink}
+                                >
+                                  <TextField
+                                    // hintText="Variable name"
+                                    className="CreateNodeInput"
+                                    floatingLabelText="Target variable name"
+                                    value={this.state.newLinkInput}
+                                    onChange={this.handleNewLinkInputChange}
+                                  />
+                                  <br />
+                                  <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
+                                    <MenuItem value="Causal" primaryText="Causal" />
+                                    <MenuItem value="Hypothesized" primaryText="Hypothesized" />
+                                  </DropDownMenu>
+                                  <br />
+                                  <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
+                                    <MenuItem value="via Model" primaryText="via Model" />
+                                    <MenuItem value="via Opinion" primaryText="via Opinion" />
+                                    <MenuItem value="via Reference" primaryText="via Reference" />
+                                  </DropDownMenu>
+                                </Dialog>
+                              </div>
                             )
                           }
                         </div>
-                        {
-                          selectedType === 'Link' && (
-                            <div className="InfoLegendLinks">
-                              <Row>
-                                <Col xs={2}>
-                                  <div className="LinksTo">Type</div>
-                                  <div className="LinksTo">Origin</div>
-                                  <div className="LinksTo">Reference</div>
-                                  <div className="LinksTo">Model</div>
-                                </Col>
-                                <Col xs={8}>
-                                  {influenceString}
-                                  <br />
-                                  {originString}
-                                  <br />
-                                  {referenceString}
-                                  <br />
-                                  {modelString}
-                                </Col>
-                                <Col xs={2} />
-                              </Row>
-                            </div>
-                          )
-                        }
-                        {
-                          renderedLinksToNode.length > 0 && (
-                            <div className="InfoLegendLinks">
-                              <Row>
-                                {/* <Col xs={2}>
-                                  <div className="LinksTo">Links</div>
-                                </Col>
-                                <Col xs={8} style={{maxHeight: "55px", overflow: "scroll"}}>
-                                  {renderedLinksToNode}
-                                </Col>
-                                <Col xs={2} /> */}
-                                <Col xs={2}>
-                                  <div className="LinksTo">Origin</div>
-                                </Col>
-                                <Col xs={8}>
-                                  {renderedNodeReferences}
-                                </Col>
-                                <Col xs={2} />
-                              </Row>
-                            </div>
-                          )
-                        }
-                        { 
-                          selectedType === 'Variable' && (
-                            <div className="InfoLegendButton">
-                              {/* <RaisedButton
-                                label="Add to model"
-                                onClick={this.handleAddVariable}
-                                primary={true} 
-                              /> */}
-                              <RaisedButton
-                                label="Add Link"
-                                onClick={this.toggleEditLink}
-                                primary={true} 
-                              />
-                              <Dialog
-                                title="Create a new link"
-                                actions={editLinkActions}
-                                modal={false}
-                                open={this.state.isEditLinkOpen}
-                                onRequestClose={this.toggleEditLink}
-                              >
-                                <TextField
-                                  // hintText="Variable name"
-                                  className="CreateNodeInput"
-                                  floatingLabelText="Target variable name"
-                                  value={this.state.newLinkInput}
-                                  onChange={this.handleNewLinkInputChange}
-                                />
-                                <br />
-                                <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
-                                  <MenuItem value="Causal" primaryText="Causal" />
-                                  <MenuItem value="Hypothesized" primaryText="Hypothesized" />
-                                </DropDownMenu>
-                                <br />
-                                <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
-                                  <MenuItem value="via Model" primaryText="via Model" />
-                                  <MenuItem value="via Opinion" primaryText="via Opinion" />
-                                  <MenuItem value="via Reference" primaryText="via Reference" />
-                                </DropDownMenu>
-                              </Dialog>
-                            </div>
-                          )
-                        }
+                      </Col>
+                      <Col xs={1} />
+                    </Row>
+                  </Paper>
+                </div>
+              </div>
+              {/* <div className="ModelContainer">
+                <div className="InfoContainer">
+                  <Row>
+                    <Col xd={4}>
+                      {
+                        renderedVariables.length > 0 && (
+                          <div className="VariablesContainer">
+                            {renderedWeightForm}
+                          </div>
+                        )
+                      }
+                    </Col>
+                    <Col xs={8}>
+                      <AmCharts.React
+                        ref={(radar) => { this.radar = radar; }}
+                        style={{
+                          width: "100%",
+                          height: "450px"
+                        }}
+                        options={{
+                          "type": "radar",
+                          "theme": "light",
+                          "dataProvider": dataProvider,
+                          "colors": ["rgb(11, 179, 214)", "#fff"],
+                          "startDuration": 0,
+                          "graphs": [{
+                            "balloonText": "Weighting: [[value]]",
+                            "bullet": "round",
+                            "fillAlphas": 0.9,
+                            "lineThickness": 2,
+                            "valueField": "weight",
+                            "fontFamily": "Lato",
+                            "fillColors": ["rgb(11, 179, 214)", "rgba(255,255,0,0.7)"],
+                            "gradientOrientation": "horizontal",
+                          }],
+                          "categoryField": "variable",
+                        }}
+                      />
+                      <div className="SaveContainer">
+                        {renderedSaveForm}
                       </div>
                     </Col>
-                    <Col xs={1} />
                   </Row>
-                </Paper>
-              </div>
-            </div>
-            {/* <div className="ModelContainer">
-              <div className="InfoContainer">
-                <Row>
-                  <Col xd={4}>
-                    {
-                      renderedVariables.length > 0 && (
-                        <div className="VariablesContainer">
-                          {renderedWeightForm}
-                        </div>
-                      )
-                    }
-                  </Col>
-                  <Col xs={8}>
-                    <AmCharts.React
-                      ref={(radar) => { this.radar = radar; }}
-                      style={{
-                        width: "100%",
-                        height: "450px"
-                      }}
-                      options={{
-                        "type": "radar",
-                        "theme": "light",
-                        "dataProvider": dataProvider,
-                        "colors": ["rgb(11, 179, 214)", "#fff"],
-                        "startDuration": 0,
-                        "graphs": [{
-                          "balloonText": "Weighting: [[value]]",
-                          "bullet": "round",
-                          "fillAlphas": 0.9,
-                          "lineThickness": 2,
-                          "valueField": "weight",
-                          "fontFamily": "Lato",
-                          "fillColors": ["rgb(11, 179, 214)", "rgba(255,255,0,0.7)"],
-                          "gradientOrientation": "horizontal",
-                        }],
-                        "categoryField": "variable",
-                      }}
-                    />
-                    <div className="SaveContainer">
-                      {renderedSaveForm}
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </div> */}
+                </div>
+              </div> */}
 
-          </Col>
-        </Row>
-      </Container>
+            </Col>
+          </Row>
+        </Container>
+      </React.Fragment>
     );
   }
 }

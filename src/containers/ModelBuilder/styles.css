@@ -33,6 +33,10 @@
   text-transform: uppercase;
 }
 
+.ForceGraphContainer {
+  padding-left: calc((100% - 1000px) / 2);
+}
+
 .InfoContainer {
   /* padding: 15px 15px 0; */
   padding: 30px;

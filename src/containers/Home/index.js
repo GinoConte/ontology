@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Row, Container } from 'reactstrap'
+import { ForceGraph2D, ForceGraph3D, ForceGraphVR } from 'react-force-graph';
 
 import FlatButton from 'material-ui/FlatButton';
 
 import './styles.css';
+
 
 class Home extends Component {
   render() {
@@ -19,6 +21,8 @@ class Home extends Component {
               <FlatButton label="About" className="Home-button" />
               <FlatButton href="/categories" label="Knowledge Packs" className="Home-button" primary={true} />
             </div>
+
+
           </Col>
         </Row>
       </Container>

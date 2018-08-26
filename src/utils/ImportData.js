@@ -23,6 +23,7 @@ function ImportData(callback) {
           concept_1: variable["Concept 1"] || '',
           concept_2: variable["Concept 2"] || '',
           concept_3: variable["Concept 3"] || '',
+          value: 1,
 
         });
 
