@@ -29,85 +29,7 @@ import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 
 import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
-
-// graph payload (with minimalist structure)
-const data = {
-  nodes: [
-    {
-      id: 'Click-through rate',
-      name: 'Click-through rate',
-    },
-    {
-      id: 'Affiliation',
-      name: 'Affiliation',
-    },
-    {
-      id: 'Conversion rate',
-      name: 'Conversion rate',
-    },
-    {
-      id: 'Conversation',
-      name: 'Conversation',
-    },
-    {
-      id: 'Responsiveness',
-      name: 'Responsiveness',
-    },
-    {
-      id: 'Session duration',
-      name: 'Session duration',
-    },
-    {
-      id: 'Age',
-      name: 'Age',
-    }
-  ],
-  links: [
-    {
-      source: 'Click-through rate',
-      target: 'Affiliation',
-      linkType: 'Causal',
-      linkOrigin: 'via reference',
-      value: 10,
-    },
-    {
-      source: 'Click-through rate',
-      target: 'Conversation',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via model',
-      value: 2,
-    },
-    {
-      source: 'Affiliation',
-      target: 'Conversion rate',
-      linkType: 'Causal',
-      linkOrigin: 'via opinion',
-      value: 3,
-    },
-    {
-      source: 'Conversation',
-      target: 'Conversion rate',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via reference',
-      value: 12,
-    },
-    {
-      source: 'Responsiveness',
-      target: 'Conversion rate',
-      linkType: 'Causal',
-      linkOrigin: 'via opinion',
-      value: 4,
-    },
-    {
-      source: 'Session duration',
-      target: 'Conversion rate',
-      linkType: 'Hypothesized',
-      linkOrigin: 'via reference',
-      value: 8,
-    },
-  ],
-  removedLinks: [],
-};
+import { throws } from 'assert';
 
 function hsl_col_perc(percent, start, end) {
   var a = percent / 100,
@@ -128,6 +50,8 @@ class ModelBuilder extends Component {
       addedVariables: [],
       editLinkTypeValue: 'Causal',
       editLinkOriginValue: 'via Model',
+      highlightedLinks: [],
+      highlightedNodes: [],
       isEditLinkOpen: false,
       newLinkInput: '',
       newVariableInput: '',
@@ -166,6 +90,7 @@ class ModelBuilder extends Component {
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleConceptChange = this.handleConceptChange.bind(this);
+    this.handleLinkHover = this.handleLinkHover.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
@@ -293,7 +218,6 @@ class ModelBuilder extends Component {
         }
       }
     }
-    console.log('found', authorsFound);
     return authorsFound;
   }
 
@@ -354,6 +278,13 @@ class ModelBuilder extends Component {
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
       selectedNodeLinks: this.getLinksToNode(selectedNode.id),
+    });
+  }
+
+  handleLinkHover(link, prevLink) {
+    this.setState({ 
+      highlightedLinks: link ? [link] : [],
+      highlightedNodes: link? [link.source, link.target] : [],
     });
   }
 
@@ -682,6 +613,8 @@ class ModelBuilder extends Component {
       addedVariables,
       checkboxes,
       data,
+      highlightedLinks,
+      highlightedNodes,
       newVariableInput,
       selectedNodeID,
       selectedNodeLinks,
@@ -792,7 +725,6 @@ class ModelBuilder extends Component {
             <span>{author.fullName}{author.affiliation && ` (${author.affiliation})`}{index < (authors.length - 1) && ' & '}</span>
           );
         });
-        console.log('rendered', renderedAuthors);
         return (
           <div className="NodeReference" onClick={this.toggleReferenceModal}>
             <span style={{textDecoration: 'underline'}}>{reference.id}:</span><span>&nbsp;{reference.item}</span>
@@ -988,52 +920,6 @@ class ModelBuilder extends Component {
     }
 
     // render the graph
-    // const renderedForceGraphNodes = data.nodes.map(node => {
-    //   let colorPercentage = numLinks[node.id] * 5 > 100 ? 100 : numLinks[node.id] * 3;
-    //   if (!numLinks[node.id]) {
-    //     colorPercentage = 1;
-    //   }
-    //   const color = hsl_col_perc(colorPercentage, 190, 200);
-    //   let renderedNode = (
-    //     <ForceGraphNode
-    //       // fill="rgba(30, 210, 235, 1)"
-    //       fill={color}
-    //       node={ { id: node.id, name: node.name, radius: 3, } }
-    //     />
-    //   );
-    //   if (numLinks[node.id] > 5) {
-    //     renderedNode = (
-    //       <ForceGraphNode
-    //         fill={color}
-    //         // size="200"
-    //         // showLabel
-    //         node={ { id: node.id, name: node.name, radius: 3, } }
-    //       />
-    //     );
-    //   }
-    //   if (data.nodes.length < 30) {
-    //     renderedNode = (
-    //       <ForceGraphNode
-    //         fill={color}
-    //         showLabel
-    //         node={ { id: node.id, name: node.name, radius: 3, } }
-    //       />
-    //     );
-    //   }
-    //   return renderedNode;
-    // });
-
-    // const renderedForceGraphLinks = data.links.map(link => {
-    //   return (
-    //     <ForceGraphArrowLink
-    //       stroke={link.linkType === 'Causal' ? 'rgba(131, 198, 72, 0.8)' : 'rgba(228, 82, 75, 0.8)'}
-    //       targetRadius="1"
-    //       onClick={(e) => console.log('hello', e)}
-    //       link={ { source: link.source, target: link.target, value: 1 } }
-    //     />
-    //   );
-    // });
-
     let renderedForceGraph = (
       <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
           <ForceGraph2D
@@ -1043,25 +929,31 @@ class ModelBuilder extends Component {
             nodeResolution={16}
             linkResolution={16}
             width={1000}
-            linkWidth="2"
+            linkWidth={link => highlightedLinks.indexOf(link) > -1 ? "4" : "2"}
+            linkColor={link => highlightedLinks.indexOf(link) > -1 ? "rgba(255, 198, 40, 0.7)" : link.color}
             nodeLabel="name"
             linkLabel="linkOrigin"
             backgroundColor="transparent"
+            // backgroundColor="rgba(0,0,0,0.9)"
             linkDirectionalParticles={1}
             onNodeClick={this.handleNodeClick}
+            onLinkHover={this.handleLinkHover}
             nodeCanvasObject={(node, ctx, globalScale) => {
               let label = node.name;
               const fontSize = 12/globalScale;
               ctx.font = `${fontSize}px Sans-Serif`;
-              const textWidth = ctx.measureText(label).width;
-              const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
               ctx.fillStyle = node.color;
-              // ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
               ctx.beginPath();
               ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
               ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
               ctx.fill();
-              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 5) {
+
+              let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
+              if (isHighlightedNode) {
+                ctx.fillStyle = "rgba(255, 198, 40, 0.7)";
+                ctx.stroke();
+              }
+              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 5 || isHighlightedNode) {
                 if (this.getLinksToNode(node.id).length > 5 && label.length > 20) {
                   label = label.slice(0,20) + '...';
                 }
@@ -1075,41 +967,6 @@ class ModelBuilder extends Component {
         }
       </div>
     );
-
-    // if (data.nodes.length < 30) {
-    //   renderedForceGraph = (
-    //     <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
-    //         <ForceGraph2D
-    //           enableNodeDrag
-    //           graphData={data}
-    //           linkCurvature={0}
-    //           width={1000}
-    //           linkWidth="2"
-    //           nodeLabel="name"
-    //           backgroundColor="transparent"
-    //           linkDirectionalParticles={1}
-    //           onNodeClick={this.handleNodeClick}
-    //           nodeCanvasObject={(node, ctx, globalScale) => {
-    //             const label = node.name;
-    //             const fontSize = 12/globalScale;
-    //             ctx.font = `${fontSize}px Sans-Serif`;
-    //             const textWidth = ctx.measureText(label).width;
-    //             const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); // some padding
-    //             ctx.fillStyle = node.color;
-    //             // ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, ...bckgDimensions);
-    //             ctx.beginPath();
-    //             ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
-    //             ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
-    //             ctx.fill();
-    //             ctx.textAlign = 'center';
-    //             ctx.textBaseline = 'middle';
-    //             ctx.fillStyle = "black";
-    //             ctx.fillText(label, node.x, node.y - 5);
-    //           }}
-    //         />
-    //     </div>
-    //   );
-    // }
 
     const renderedConceptDropdownItems = data.concepts ? data.concepts.map((concept, index) => {
       return <MenuItem value={index + 2} primaryText={concept} />
