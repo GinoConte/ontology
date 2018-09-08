@@ -678,87 +678,6 @@ class ModelBuilder extends Component {
       weightValues,
     } = this.state;
 
-    // the graph configuration, you only need to pass down properties
-    // that you want to override, otherwise default ones will be used
-    const myConfig = {
-      nodeHighlightBehavior: true,
-      node: {
-        color: 'rgba(11, 179, 214, 1)',
-        fontSize: 13,
-        fontWeight: 100,
-        fontColor: 'rgb(11, 179, 214)',
-        size: 200,
-        labelProperty: 'name',
-        highlightStrokeColor: 'rgb(255, 198, 40)',
-        highlightFontSize: 13,
-        highlightFontWeight: 100,
-      },
-      link: {
-        color: 'd3d3d3',
-        strokeWidth: 3,
-        highlightColor: 'rgb(255, 198, 40)',
-        semanticStrokeWidth: false,
-      },
-      linkHighlightBehavior: true,
-      height: 500,
-      width: "100%",
-      automaticRearrangeAfterDropNode: shouldSimulate,
-      staticGraph: false,
-    };
-
-    // graph event callbacks
-    const onClickNode = function(nodeId) {
-      // window.alert('Clicked node ${nodeId}');
-    };
-    
-    const onMouseOverNode = function(nodeId) {
-      // window.alert(`Mouse over node ${nodeId}`);
-    };
-    
-    const onMouseOutNode = function(nodeId) {
-      // window.alert(`Mouse out node ${nodeId}`);
-    };
-    
-    const onClickLink = function(source, target) {
-      // window.alert(`Clicked link between ${source} and ${target}`);
-    };
-    
-    const onMouseOverLink = function(source, target) {
-      // window.alert(`Mouse over in link between ${source} and ${target}`);
-    };
-    
-    const onMouseOutLink = function(source, target) {
-      // window.alert(`Mouse out link between ${source} and ${target}`);
-    };
-
-    let renderedLinksToNode = [];
-    if (selectedNodeLinks) {
-      renderedLinksToNode = selectedNodeLinks.map((link) => {
-        if (selectedNodeID !== link.source) {
-          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.source)} (${link.linkType})`}</div>
-        } else {
-          return <div className="InfoLegendItem">{`${this.getNodeFromID(link.target)} (${link.linkType})`}</div>
-        }
-      });
-    }
-
-    let renderedVariables = [];
-    if (data) {
-      const variables = data.nodes;
-      renderedVariables = variables.map((variable) => {
-        let value = 1;
-        if (this.state.weightValues[variable.name]) {
-          value = this.state.weightValues[variable.name];
-        }
-        return (
-          <div className="VariableItem">
-            {variable.name}: {value}
-          </div>
-        );
-      });
-    }
-
-
     let influenceString = '';
     let originString = '';
     let referenceString = '';
@@ -853,37 +772,6 @@ class ModelBuilder extends Component {
         // node.value = 5;
       }
     });
-    //future 'hide independent variables' feature?
-    // if (!this.state.isCheckedIndependent) {
-    //   data.nodes.forEach((node, nodeIndex) => {
-    //     filteredData.links.forEach((link, linkIndex) => {
-    //       if (link.source.id === node.id || link.target.id === node.id) {
-    //         //check if id exists
-    //         if (filteredData.nodes.indexOf(node.id) > -1) {
-    //         } else {
-    //           filteredData.nodes.push({
-    //             id: node.id,
-    //             name: node.name,
-    //             // name: numLinks[node.id] > 2 ? node.name : ' ',
-    //             renderLabel: numLinks[node.id] > 1 ? true : false,
-    //             size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
-    //           });
-    //         }
-    //       }
-    //     });
-    //   });
-    // } else {
-    //   data.nodes.forEach((node, index) => {
-    //     filteredData.nodes.push({
-    //       id: node.id,
-    //       name: node.name,
-    //       // name: numLinks[node.id] > 2 ? node.name : ' ',
-    //       renderLabel: numLinks[node.id] > 1 ? true : false,
-    //       size: numLinks[node.id] > 4 ? numLinks[node.id] * 400 : numLinks[node.id] * 150,
-    //     });
-    //   });
-    //   // filteredData.nodes = data.nodes;
-    // }
 
     //if empty, display the knowledge pack
     if (filteredData.nodes.length < 1) {
@@ -1249,6 +1137,11 @@ class ModelBuilder extends Component {
                                   onClick={this.handleAddVariable}
                                   primary={true} 
                                 /> */}
+                                <RaisedButton
+                                  label="Collapse"
+                                  onClick={this.collapseNodes}
+                                  primary={true}
+                                />
                                 <RaisedButton
                                   label="Add Link"
                                   onClick={this.toggleEditLink}
