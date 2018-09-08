@@ -72,6 +72,7 @@ function importLinks(callback) {
       const link = data[datapoint];
       if (link['Var 1']) {
         links.push({
+          id: link['Var Link ID'],
           source: link['Var 2'],
           target: link['Var 1'],
           linkType: link['Link Type'],

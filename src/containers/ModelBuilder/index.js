@@ -30,6 +30,7 @@ import { Redirect } from 'react-router-dom';
 
 import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
 import { throws } from 'assert';
+import d3 from 'd3-selection';
 
 function hsl_col_perc(percent, start, end) {
   var a = percent / 100,
@@ -50,6 +51,8 @@ class ModelBuilder extends Component {
       addedVariables: [],
       editLinkTypeValue: 'Causal',
       editLinkOriginValue: 'via Model',
+      focusedLinks: [],
+      focusedNodes: [],
       highlightedLinks: [],
       highlightedNodes: [],
       isEditLinkOpen: false,
@@ -91,6 +94,7 @@ class ModelBuilder extends Component {
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
     this.handleConceptChange = this.handleConceptChange.bind(this);
     this.handleLinkHover = this.handleLinkHover.bind(this);
+    this.handleNodeHover = this.handleNodeHover.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
@@ -150,6 +154,9 @@ class ModelBuilder extends Component {
       });
     });
     
+    if (this.forceGraphRef) {
+      console.log('ref', this.forceGraphRef);
+    }
   }
 
   addNewNode(e) {
@@ -266,10 +273,31 @@ class ModelBuilder extends Component {
   };
 
   handleNodeClick(clickedNode) {
-    console.log('node clicked', clickedNode);
-    const nodes = this.state.data.nodes;
     const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
+    
+    //handle focus
+    let { focusedNodes, focusedLinks } = this.state || [];
+    if (focusedNodes.indexOf(selectedNode) > -1) {
+      focusedLinks = [];
+      focusedNodes = [];
+    } else {
+      focusedLinks = [...this.getLinksToNode(selectedNode.id)];
+      focusedNodes = [selectedNode];
+    }
+    focusedLinks.forEach(link => {
+      const sourceNode = this.getNodeFromID(link.source.id);
+      const targetNode = this.getNodeFromID(link.target.id);
+      if (focusedNodes.indexOf(sourceNode) < 0) {
+        focusedNodes.push(sourceNode);
+      }
+      if (focusedNodes.indexOf(targetNode) < 0) {
+        focusedNodes.push(targetNode);
+      }
+    });
+    
     this.setState({
+      focusedNodes,
+      focusedLinks,
       selectedNodeID: selectedNode.id,
       selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
       selectedTitle: selectedNode.name,
@@ -286,6 +314,29 @@ class ModelBuilder extends Component {
       highlightedLinks: link ? [link] : [],
       highlightedNodes: link? [link.source, link.target] : [],
     });
+  }
+
+  handleNodeHover(node, prevNode) {
+    const highlightedNodes = [];
+    let highlightedLinks = [];
+    //also highlight all links to node and their nodes
+    if (node) {
+      highlightedNodes.push(node);
+      highlightedLinks = [...this.getLinksToNode(node.id)];
+      highlightedLinks.forEach(link => {
+        const sourceNode = this.getNodeFromID(link.source.id);
+        const targetNode = this.getNodeFromID(link.target.id);
+        if (highlightedNodes.indexOf(sourceNode) < 0) {
+          highlightedNodes.push(sourceNode);
+        }
+        if (highlightedNodes.indexOf(targetNode) < 0) {
+          highlightedNodes.push(targetNode);
+        }
+      });
+
+    }
+    
+    this.setState({ highlightedNodes, highlightedLinks });
   }
 
   handleLinkClick(sourceID, targetID) {
@@ -613,6 +664,8 @@ class ModelBuilder extends Component {
       addedVariables,
       checkboxes,
       data,
+      focusedNodes,
+      focusedLinks,
       highlightedLinks,
       highlightedNodes,
       newVariableInput,
@@ -929,14 +982,30 @@ class ModelBuilder extends Component {
             nodeResolution={16}
             linkResolution={16}
             width={1000}
-            linkWidth={link => highlightedLinks.indexOf(link) > -1 ? "4" : "2"}
-            linkColor={link => highlightedLinks.indexOf(link) > -1 ? "rgba(255, 198, 40, 0.7)" : link.color}
+            linkWidth={link => {
+              if (highlightedLinks.indexOf(link) > -1 || focusedLinks.indexOf(link) > -1) {
+                return "4";
+              } else {
+                return "2";
+              }
+            }}
+            linkColor={link => {
+
+              if (focusedLinks.indexOf(link) > -1) {
+                return "rgba(228, 82, 75, 0.7)";
+              } else if (highlightedLinks.indexOf(link) > -1) {
+                return "rgba(255, 198, 40, 0.7)";
+              } else {
+                return link.color;
+              }
+            }}
             nodeLabel="name"
             linkLabel="linkOrigin"
             backgroundColor="transparent"
             // backgroundColor="rgba(0,0,0,0.9)"
             linkDirectionalParticles={1}
             onNodeClick={this.handleNodeClick}
+            onNodeHover={this.handleNodeHover}
             onLinkHover={this.handleLinkHover}
             nodeCanvasObject={(node, ctx, globalScale) => {
               let label = node.name;
@@ -949,11 +1018,18 @@ class ModelBuilder extends Component {
               ctx.fill();
 
               let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
-              if (isHighlightedNode) {
-                ctx.fillStyle = "rgba(255, 198, 40, 0.7)";
+              let isFocusedNode = focusedNodes.indexOf(node) > -1;
+              if (isFocusedNode) {
+                ctx.strokeStyle = "rgb(228, 82, 75)";
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+              } else if (isHighlightedNode) {
+                ctx.strokeStyle = "rgba(255, 198, 40, 1)";
+                ctx.lineWidth = 0.5;
                 ctx.stroke();
               }
-              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 5 || isHighlightedNode) {
+
+              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode) {
                 if (this.getLinksToNode(node.id).length > 5 && label.length > 20) {
                   label = label.slice(0,20) + '...';
                 }
