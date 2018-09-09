@@ -1,23 +1,11 @@
 import React, { Component } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Col, Row, Container } from 'reactstrap'
-import AmCharts from '@amcharts/amcharts3-react';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
 import SelectField from 'material-ui/SelectField';
 import Checkbox from 'material-ui/Checkbox';
 import './styles.css';
-// import { Graph } from 'react-d3-graph';
-// import { 
-//   InteractiveForceGraph,
-//   ForceGraph,
-//   ForceGraphNode,
-//   ForceGraphArrowLink,
-//   ForceGraphLink,
-//   updateSimulation,
-//   runSimulation,
-//   createSimulation
-// } from 'react-vis-force';
 import { ForceGraph2D, ForceGraph3D, ForceGraphVR } from 'react-force-graph';
 import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
@@ -46,6 +34,8 @@ class ModelBuilder extends Component {
     super();
     this.state = {
       alpha: 1,
+      collapsedLinks: [],
+      collapsedNodes: [],
       conceptValue: 1,
       conceptFilterName: 'All',
       addedVariables: [],
@@ -85,6 +75,8 @@ class ModelBuilder extends Component {
     }
 
     this.addNewNode = this.addNewNode.bind(this);
+    this.collapseNode = this.collapseNode.bind(this);
+    this.expandNode = this.expandNode.bind(this);
     this.getNodeFromID = this.getNodeFromID.bind(this);
     this.getNodeFromName = this.getNodeFromName.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
@@ -173,6 +165,54 @@ class ModelBuilder extends Component {
         // alpha: this.state.alpha + 1,
       })
     };
+  }
+
+  collapseNode(nodeID) {
+    // for each link, if the target is nodeid, remove it;
+    const { data, collapsedNodes, collapsedLinks } = this.state || [];
+    const nodesToRemove = [];
+    const linksToRemove = [];
+    const filteredLinks = data.links.filter(link => {
+      if (link.target.id === nodeID) {
+        if (this.getLinksToNode(link.source.id).length <= 1) {
+          nodesToRemove.push(link.source);
+          linksToRemove.push(link);
+          return false;
+        } else {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    });
+    const filteredNodes = data.nodes.filter(node => {
+      return !(nodesToRemove.indexOf(node) > -1);
+    });
+
+    const newData = {
+      nodes: [...filteredNodes],
+      links: [...filteredLinks],
+    };
+    this.setState({
+      data: newData,
+      collapsedNodes: [...collapsedNodes, { nodeid: nodeID, nodesRemoved: nodesToRemove }],
+      collapsedLinks: [...collapsedLinks, { nodeid: nodeID, linksRemoved: linksToRemove}],
+    });
+  }
+
+  expandNode(nodeID) {
+    const { data, collapsedNodes, collapsedLinks } = this.state;
+    const collapsedNodeObject = collapsedNodes.filter(cluster => cluster.nodeid === nodeID)[0] || { nodesToRemove: [] };
+    const collapsedLinkObject = collapsedLinks.filter(cluster => cluster.nodeid === nodeID)[0] || { linksToRemove: [] };
+    const newData = {
+      nodes: [...data.nodes, ...collapsedNodeObject.nodesRemoved],
+      links: [...data.links, ...collapsedLinkObject.linksRemoved],
+    }
+    this.setState({
+      data: newData,
+      collapsedNodes: [...collapsedNodes.filter(cluster => cluster.nodeid !== nodeID)],
+      collapsedLinks: [...collapsedLinks.filter(cluster => cluster.nodeid !== nodeID)],
+    });
   }
 
   handleLinkTypeChange = (event, index, dropdownValue) => this.setState({ editLinkTypeValue: dropdownValue});
@@ -1138,8 +1178,13 @@ class ModelBuilder extends Component {
                                   primary={true} 
                                 /> */}
                                 <RaisedButton
+                                  label="Expand"
+                                  onClick={() => this.expandNode(selectedNodeID)}
+                                  primary={true}
+                                />
+                                <RaisedButton
                                   label="Collapse"
-                                  onClick={this.collapseNodes}
+                                  onClick={() => this.collapseNode(selectedNodeID)}
                                   primary={true}
                                 />
                                 <RaisedButton
