@@ -1087,16 +1087,6 @@ class ModelBuilder extends Component {
                       <Col xs={6}>
                         <div className="InfoLegend">
                           <div className="InfoLegendTitle selection">
-                            <FlatButton
-                              label="Expand"
-                              onClick={() => this.expandNode(selectedNodeID)}
-                              secondary
-                            />
-                            <FlatButton
-                              label="Collapse"
-                              onClick={() => this.collapseNode(selectedNodeID)}
-                              secondary
-                            />
                             { selectedType ? `${selectedTitle}` : 'Nothing selected'}
                             {
                               selectedType && (
@@ -1146,37 +1136,51 @@ class ModelBuilder extends Component {
                           { 
                             selectedType === 'Variable' && (
                               <div className="InfoLegendButton">
-                                <RaisedButton
-                                  label="Add Link"
-                                  onClick={this.toggleEditLink}
-                                  primary={true} 
-                                />
-                                <Dialog
-                                  title="Create a new link"
-                                  actions={editLinkActions}
-                                  modal={false}
-                                  open={this.state.isEditLinkOpen}
-                                  onRequestClose={this.toggleEditLink}
-                                >
-                                  <TextField
-                                    // hintText="Variable name"
-                                    className="CreateNodeInput"
-                                    floatingLabelText="Target variable name"
-                                    value={this.state.newLinkInput}
-                                    onChange={this.handleNewLinkInputChange}
+                                <div>
+                                  <FlatButton
+                                    label="Expand"
+                                    onClick={() => this.expandNode(selectedNodeID)}
+                                    secondary
                                   />
-                                  <br />
-                                  <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
-                                    <MenuItem value="Causal" primaryText="Causal" />
-                                    <MenuItem value="Hypothesized" primaryText="Hypothesized" />
-                                  </DropDownMenu>
-                                  <br />
-                                  <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
-                                    <MenuItem value="via Model" primaryText="via Model" />
-                                    <MenuItem value="via Opinion" primaryText="via Opinion" />
-                                    <MenuItem value="via Reference" primaryText="via Reference" />
-                                  </DropDownMenu>
-                                </Dialog>
+                                  <FlatButton
+                                    label="Collapse"
+                                    onClick={() => this.collapseNode(selectedNodeID)}
+                                    secondary
+                                  />
+                                </div>
+                                <div>
+                                  <RaisedButton
+                                    label="Add Link"
+                                    onClick={this.toggleEditLink}
+                                    primary={true} 
+                                  />
+                                  <Dialog
+                                    title="Create a new link"
+                                    actions={editLinkActions}
+                                    modal={false}
+                                    open={this.state.isEditLinkOpen}
+                                    onRequestClose={this.toggleEditLink}
+                                  >
+                                    <TextField
+                                      // hintText="Variable name"
+                                      className="CreateNodeInput"
+                                      floatingLabelText="Target variable name"
+                                      value={this.state.newLinkInput}
+                                      onChange={this.handleNewLinkInputChange}
+                                    />
+                                    <br />
+                                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
+                                      <MenuItem value="Causal" primaryText="Causal" />
+                                      <MenuItem value="Hypothesized" primaryText="Hypothesized" />
+                                    </DropDownMenu>
+                                    <br />
+                                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
+                                      <MenuItem value="via Model" primaryText="via Model" />
+                                      <MenuItem value="via Opinion" primaryText="via Opinion" />
+                                      <MenuItem value="via Reference" primaryText="via Reference" />
+                                    </DropDownMenu>
+                                  </Dialog>
+                                </div>
                               </div>
                             )
                           }

@@ -50,18 +50,6 @@ function ImportData(callback) {
       graph.links = links;
       return callback(graph) || null;
     });
-
-    // graph.links.push({
-    //   source: 'VID00001',
-    //   target: 'VID00002',
-    //   linkType: 'Causal',
-    //   linkOrigin: 'via reference',
-    //   value: 10,
-    // })
-
-    // console.log(graph);
-
-    // return callback(graph) || null;
   });
 }
 
