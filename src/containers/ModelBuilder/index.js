@@ -1005,32 +1005,16 @@ class ModelBuilder extends Component {
                       </DropDownMenu>
                     </ToolbarGroup>
                     <ToolbarGroup>
-                      {/* <ToolbarTitle text="Options" /> */}
-                      {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
-                      {/* <ToolbarSeparator />
-                      <ToolbarTitle className="ToolbarTitle" text="Activities:" />
-                      <DropDownMenu className="ToolbarTitle dropdown" value={this.state.dropdownValue} onChange={this.handleDropDownChange}>
-                        <MenuItem value={1} primaryText="Explore Variables" />
-                        <MenuItem value={2} primaryText="Model Builder" />
-                        <MenuItem value={3} primaryText="View datasets" />
-                        <MenuItem value={4} primaryText="Social Growth" />
-                        <MenuItem value={5} primaryText="Monthly Active Users" />
-                      </DropDownMenu> */}
                     </ToolbarGroup>
                     <ToolbarGroup>
-                      {/* <ToolbarTitle text="Options" /> */}
-                      {/* <FontIcon className="muidocs-icon-custom-sort" /> */}
                       <ToolbarSeparator />
                       <RaisedButton
                         label="Animate"
                         onClick={this.handleSimulate}
                         primary={!this.state.shouldSimulate} 
                       />
-                      {/* <Checkbox label="Interest" /> */}
                     </ToolbarGroup>
                   </Toolbar>
-                  {/* <FlatButton label="Pause" />
-                  <FlatButton label="Simulate" /> */}
                 </div>
                 <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
                   <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
@@ -1048,22 +1032,10 @@ class ModelBuilder extends Component {
           <Row>
             <Col>
               <div>
-                {/* <Graph
-                  id="d3-ontology" // id is mandatory, if no id is defined rd3g will throw an error
-                  data={filteredData}
-                  config={myConfig}
-                  onClickNode={this.handleNodeClick}
-                  onClickLink={this.handleLinkClick}
-                  onMouseOverNode={onMouseOverNode}
-                  onMouseOutNode={onMouseOutNode}
-                  onMouseOverLink={onMouseOverLink}
-                  onMouseOutLink={onMouseOutLink}
-                /> */}
                 <div className="InfoContainer">
                   <Row>
                     <Col xs={8}>
                       <div className="CreateNode">
-                        {/* <span className="CreateNodeSubtitle">Add new variable: </span> */}
                         <form onSubmit={this.addNewNode}>
                           <TextField
                             // hintText="Variable name"
@@ -1073,11 +1045,6 @@ class ModelBuilder extends Component {
                             onChange={this.handleNewVariableInputChange}
                             onSubmit={this.addNewNode}
                           /> 
-                          {/* <RaisedButton
-                            label="Create Variable"
-                            // onClick={this.handleAddVariable}
-                            primary={true} 
-                          />     */}
                           <FlatButton label="Create Variable" onClick={this.addNewNode} primary={true} />
                         </form>
                       </div>
@@ -1165,13 +1132,6 @@ class ModelBuilder extends Component {
                             renderedNodeReferences && renderedNodeReferences.length > 0 && (
                               <div className="InfoLegendLinks">
                                 <Row>
-                                  {/* <Col xs={2}>
-                                    <div className="LinksTo">Links</div>
-                                  </Col>
-                                  <Col xs={8} style={{maxHeight: "55px", overflow: "scroll"}}>
-                                    {renderedLinksToNode}
-                                  </Col>
-                                  <Col xs={2} /> */}
                                   <Col xs={2}>
                                     <div className="LinksTo">Origin</div>
                                   </Col>
@@ -1186,11 +1146,6 @@ class ModelBuilder extends Component {
                           { 
                             selectedType === 'Variable' && (
                               <div className="InfoLegendButton">
-                                {/* <RaisedButton
-                                  label="Add to model"
-                                  onClick={this.handleAddVariable}
-                                  primary={true} 
-                                /> */}
                                 <RaisedButton
                                   label="Add Link"
                                   onClick={this.toggleEditLink}
@@ -1232,52 +1187,6 @@ class ModelBuilder extends Component {
                   </Paper>
                 </div>
               </div>
-              {/* <div className="ModelContainer">
-                <div className="InfoContainer">
-                  <Row>
-                    <Col xd={4}>
-                      {
-                        renderedVariables.length > 0 && (
-                          <div className="VariablesContainer">
-                            {renderedWeightForm}
-                          </div>
-                        )
-                      }
-                    </Col>
-                    <Col xs={8}>
-                      <AmCharts.React
-                        ref={(radar) => { this.radar = radar; }}
-                        style={{
-                          width: "100%",
-                          height: "450px"
-                        }}
-                        options={{
-                          "type": "radar",
-                          "theme": "light",
-                          "dataProvider": dataProvider,
-                          "colors": ["rgb(11, 179, 214)", "#fff"],
-                          "startDuration": 0,
-                          "graphs": [{
-                            "balloonText": "Weighting: [[value]]",
-                            "bullet": "round",
-                            "fillAlphas": 0.9,
-                            "lineThickness": 2,
-                            "valueField": "weight",
-                            "fontFamily": "Lato",
-                            "fillColors": ["rgb(11, 179, 214)", "rgba(255,255,0,0.7)"],
-                            "gradientOrientation": "horizontal",
-                          }],
-                          "categoryField": "variable",
-                        }}
-                      />
-                      <div className="SaveContainer">
-                        {renderedSaveForm}
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              </div> */}
-
             </Col>
           </Row>
         </Container>
