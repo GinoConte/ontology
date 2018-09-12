@@ -17,17 +17,6 @@ import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 
 import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
-import { throws } from 'assert';
-import d3 from 'd3-selection';
-
-function hsl_col_perc(percent, start, end) {
-  var a = percent / 100,
-      b = (end - start) * a,
-  		c = b + start;
-
-  // Return a CSS HSL string
-  return 'hsl('+c+', 100%, 50%)';
-}
 
 class ModelBuilder extends Component {
   constructor() {
@@ -185,6 +174,12 @@ class ModelBuilder extends Component {
         return true;
       }
     });
+
+    // return to avoid moving the graph due to new data
+    if (nodesToRemove.length === 0 && linksToRemove.length === 0) {
+      return;
+    }
+
     const filteredNodes = data.nodes.filter(node => {
       return !(nodesToRemove.indexOf(node) > -1);
     });
@@ -202,11 +197,20 @@ class ModelBuilder extends Component {
 
   expandNode(nodeID) {
     const { data, collapsedNodes, collapsedLinks } = this.state;
-    const collapsedNodeObject = collapsedNodes.filter(cluster => cluster.nodeid === nodeID)[0] || { nodesToRemove: [] };
-    const collapsedLinkObject = collapsedLinks.filter(cluster => cluster.nodeid === nodeID)[0] || { linksToRemove: [] };
-    const newData = {
-      nodes: [...data.nodes, ...collapsedNodeObject.nodesRemoved],
-      links: [...data.links, ...collapsedLinkObject.linksRemoved],
+    const collapsedNodeObject = collapsedNodes.filter(cluster => cluster.nodeid === nodeID)[0] || { nodesRemoved: [] };
+    const collapsedLinkObject = collapsedLinks.filter(cluster => cluster.nodeid === nodeID)[0] || { linksRemoved: [] };
+    if (collapsedLinkObject.linksRemoved.length === 0 && collapsedNodeObject.nodesRemoved.length === 0) {
+      return;
+    }
+    let newData = {
+      nodes: [...data.nodes],
+      links: [...data.links],
+    }
+    if (collapsedNodeObject.nodesRemoved) {
+      newData.nodes = [...newData.nodes, ...collapsedNodeObject.nodesRemoved];
+    }
+    if (collapsedLinkObject.linksRemoved) {
+      newData.links = [...newData.links, ...collapsedLinkObject.linksRemoved];
     }
     this.setState({
       data: newData,
@@ -1116,6 +1120,16 @@ class ModelBuilder extends Component {
                       <Col xs={6}>
                         <div className="InfoLegend">
                           <div className="InfoLegendTitle selection">
+                            <FlatButton
+                              label="Expand"
+                              onClick={() => this.expandNode(selectedNodeID)}
+                              secondary
+                            />
+                            <FlatButton
+                              label="Collapse"
+                              onClick={() => this.collapseNode(selectedNodeID)}
+                              secondary
+                            />
                             { selectedType ? `${selectedTitle}` : 'Nothing selected'}
                             {
                               selectedType && (
@@ -1177,16 +1191,6 @@ class ModelBuilder extends Component {
                                   onClick={this.handleAddVariable}
                                   primary={true} 
                                 /> */}
-                                <RaisedButton
-                                  label="Expand"
-                                  onClick={() => this.expandNode(selectedNodeID)}
-                                  primary={true}
-                                />
-                                <RaisedButton
-                                  label="Collapse"
-                                  onClick={() => this.collapseNode(selectedNodeID)}
-                                  primary={true}
-                                />
                                 <RaisedButton
                                   label="Add Link"
                                   onClick={this.toggleEditLink}
