@@ -9,6 +9,7 @@ import './styles.css';
 import { ForceGraph2D, ForceGraph3D, ForceGraphVR } from 'react-force-graph';
 import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
+import Toggle from 'material-ui/Toggle';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
@@ -935,7 +936,27 @@ class ModelBuilder extends Component {
             linkLabel="linkOrigin"
             backgroundColor="transparent"
             // backgroundColor="rgba(0,0,0,0.9)"
+            // linkCurvature={link => {
+            //   if (this.state.shouldSimulate) {
+            //     return 0.3;
+            //   } else {
+            //     return 0;
+            //   }
+            // }}
             linkDirectionalParticles={1}
+            linkDirectionalParticleWidth={link => {
+              // show all when toggled
+              if (this.state.shouldSimulate) {
+                return 4;
+              }
+              if (focusedLinks.indexOf(link) > -1) {
+                return 4;
+              } else if (highlightedLinks.indexOf(link) > -1) {
+                return 4;
+              } else {
+                return 0;
+              }
+            }}
             onNodeClick={this.handleNodeClick}
             onNodeHover={this.handleNodeHover}
             onLinkHover={this.handleLinkHover}
@@ -1007,11 +1028,11 @@ class ModelBuilder extends Component {
                     <ToolbarGroup>
                     </ToolbarGroup>
                     <ToolbarGroup>
-                      <ToolbarSeparator />
-                      <RaisedButton
-                        label="Animate"
-                        onClick={this.handleSimulate}
-                        primary={!this.state.shouldSimulate} 
+                      {/* <ToolbarSeparator /> */}
+                      <Toggle
+                        label="Flow"
+                        toggled={this.state.shouldSimulate}
+                        onToggle={this.handleSimulate}
                       />
                     </ToolbarGroup>
                   </Toolbar>
