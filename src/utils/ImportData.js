@@ -33,14 +33,17 @@ function ImportData(callback) {
           color: "rgba(11, 179, 214, 1)",
         });
 
-        if (graph.concepts.indexOf(variable["Concept 1"]) === -1) {
+        if (graph.concepts.indexOf(variable["Concept 1"]) === -1 && variable["Concept 1"] !== '') {
           graph.concepts.push(variable["Concept 1"]);
+          // graph.concepts.push({value: variable["Concept 1"].toLowerCase(), label: variable["Concept 1"]});
         }
-        if (graph.concepts.indexOf(variable["Concept 2"]) === -1) {
+        if (graph.concepts.indexOf(variable["Concept 2"]) === -1 && variable["Concept 2"] !== '') {
           graph.concepts.push(variable["Concept 2"]);
+          // graph.concepts.push({value: variable["Concept 2"].toLowerCase(), label: variable["Concept 2"]});
         }
-        if (graph.concepts.indexOf(variable["Concept 3"]) === -1) {
+        if (graph.concepts.indexOf(variable["Concept 3"]) === -1 && variable["Concept 3"] !== '') {
           graph.concepts.push(variable["Concept 3"]);
+          // graph.concepts.push({value: variable["Concept 3"].toLowerCase(), label: variable["Concept 3"]});
         }
       }
     }

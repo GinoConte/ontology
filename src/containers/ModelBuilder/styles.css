@@ -37,6 +37,12 @@
   margin-top: 25px;
 }
 
+.ConceptMultiSelect {
+  min-width: 300px;
+  text-align: left;
+  margin-left: 24px;
+}
+
 .Legend {
   width: 200px;
   margin: 30px;

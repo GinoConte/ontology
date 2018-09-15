@@ -16,8 +16,10 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui
 import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
+import Select from 'react-select';
 
 import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
+import { isConceptNameSelected } from '../../utils/ConceptUtils';
 
 class ModelBuilder extends Component {
   constructor() {
@@ -28,6 +30,8 @@ class ModelBuilder extends Component {
       collapsedNodes: [],
       conceptValue: 1,
       conceptFilterName: 'All',
+      conceptsAll: [],
+      conceptsSelected: [],
       addedVariables: [],
       editLinkTypeValue: 'Causal',
       editLinkOriginValue: 'via Model',
@@ -74,7 +78,7 @@ class ModelBuilder extends Component {
     this.getAuthorsFromIDs = this.getAuthorsFromIDs.bind(this);
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
-    this.handleConceptChange = this.handleConceptChange.bind(this);
+    this.handleConceptMultiSelect = this.handleConceptMultiSelect.bind(this);
     this.handleLinkHover = this.handleLinkHover.bind(this);
     this.handleNodeHover = this.handleNodeHover.bind(this);
     this.handleLinkClick = this.handleLinkClick.bind(this);
@@ -274,11 +278,13 @@ class ModelBuilder extends Component {
   }
 
   handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
-  handleConceptChange = (event, index, conceptValue) => {
-    const selectedConcept = event.target.innerHTML;
+
+  handleConceptMultiSelect(value, { action, removedValue }) {
+    const selectedConcepts = value;
     ImportData(data => {
-      if (selectedConcept === 'All') {
-        return this.setState({data});
+      if (isConceptNameSelected('All', selectedConcepts)) {
+        console.log('sleected all');
+        return this.setState({ data });
       }
       let newData = {
         nodes: data.nodes.slice(),
@@ -286,12 +292,10 @@ class ModelBuilder extends Component {
         concepts: data.concepts.slice(),
       };
       newData.nodes = data.nodes.filter(node => {
-        return node.concept_2 === selectedConcept || node.concept_1 === selectedConcept || node.concept_3 === selectedConcept;
+        return isConceptNameSelected(node.concept_1, selectedConcepts) || isConceptNameSelected(node.concept_2, selectedConcepts) || isConceptNameSelected(node.concept_3, selectedConcepts);
       });
       const linksWithCorrectSources = data.links.filter(link => {
         for (const newNode in newData.nodes) {
-          // console.log('node', newNode);
-          // console.log('currn lint', link);
           if (newData.nodes[newNode].id === link.source)
             return true;
         }
@@ -303,19 +307,13 @@ class ModelBuilder extends Component {
         }
       })
       newData.links = linksWithCorrectTargets;  
-  
-      console.log('simulation ref?', this.forceGraphRef);
-      // this.forceGraphRef
-      // this.forceGraphRef.props.zoom = false;  
-      // this.forceGraphRef.simulation.restart();
+
       this.setState({
-        conceptValue,
         data: newData,
-        alpha: 0.1,
       });
 
     });
-  };
+  }
 
   handleNodeClick(clickedNode) {
     const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
@@ -1001,6 +999,11 @@ class ModelBuilder extends Component {
       return <MenuItem value={index + 2} primaryText={concept} />
     }) : null;
 
+    let conceptMultiSelectOptions = data.concepts ? data.concepts.map(concept => {
+      return { value: concept, label: concept };
+    }) : [];
+    conceptMultiSelectOptions = [{value: 'All', label: 'All'}, ...conceptMultiSelectOptions];
+
     return (
       <React.Fragment>
         <Container className="Container" style={{minWidth: "960px"}}>
@@ -1019,11 +1022,14 @@ class ModelBuilder extends Component {
                         <ToolbarTitle className="ToolbarTitle" text="Knowledge pack: Housing Prices" />
                       </a>
                       <ToolbarSeparator />
-                      <ToolbarTitle className="ToolbarTitle" text="Concept:" />
-                      <DropDownMenu className="ToolbarTitle dropdown" value={this.state.conceptValue} onChange={this.handleConceptChange}>
-                        <MenuItem value={1} primaryText="All" />
-                        {renderedConceptDropdownItems}
-                      </DropDownMenu>
+                      {/* <ToolbarTitle className="ToolbarTitle" text="Concept:" /> */}
+                      <Select
+                        isMulti
+                        className="ConceptMultiSelect"
+                        onChange={this.handleConceptMultiSelect}
+                        options={conceptMultiSelectOptions || []}
+                        placeholder="Concepts"
+                      />
                     </ToolbarGroup>
                     <ToolbarGroup>
                     </ToolbarGroup>
