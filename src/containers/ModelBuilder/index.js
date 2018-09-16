@@ -18,7 +18,7 @@ import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
-import { ImportData, ImportReferences, ImportPeople } from '../../utils/ImportData';
+import { ImportData, ImportReferences, ImportMeasures, ImportPeople } from '../../utils/ImportData';
 import { isConceptNameSelected } from '../../utils/ConceptUtils';
 
 class ModelBuilder extends Component {
@@ -323,7 +323,7 @@ class ModelBuilder extends Component {
     const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
     
     //handle focus
-    let { focusedNodes, focusedLinks } = this.state || [];
+    let { isMeasureView, focusedNodes, focusedLinks } = this.state || [];
     if (focusedNodes.indexOf(selectedNode) > -1) {
       focusedLinks = [];
       focusedNodes = [];
@@ -348,7 +348,7 @@ class ModelBuilder extends Component {
       selectedNodeID: selectedNode.id,
       selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
       selectedTitle: selectedNode.name,
-      selectedType: 'Variable',
+      selectedType: isMeasureView ? 'Measure' : 'Variable',
       selectedLinkType: '',
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
@@ -578,7 +578,16 @@ class ModelBuilder extends Component {
   }
 
   handleMeasureView() {
-    this.setState({ isMeasureView: !isMeasureView });
+    const { isMeasureView } = this.state;
+    if (!isMeasureView) {
+      ImportMeasures(graph => {
+        this.setState({ data: graph, isMeasureView: !this.state.isMeasureView });
+      });
+    } else {
+      ImportData(graph => {
+        this.setState({ data: graph, isMeasureView: !this.state.isMeasureView });
+      })
+    }
   }
 
   isNodeInConcept(node) {
@@ -995,7 +1004,7 @@ class ModelBuilder extends Component {
 
               if (focusedNodes.length > 0) {
                 if (isFocusedNode) {
-                  ctx.fillStyle = 'rgb(11, 179, 214)';
+                  ctx.fillStyle = node.color;
                 } else {
                   ctx.fillStyle = 'rgba(150,150,150,1)';
                 }
@@ -1076,27 +1085,29 @@ class ModelBuilder extends Component {
                     </ToolbarGroup>
                     <ToolbarGroup>
                       {/* <ToolbarSeparator /> */}
+                      <ToolbarTitle className="ToolbarTitle" text="Measure View" style={{overflow: 'visible'}} />
                       <Toggle
-                        label="Measure"
                         toggled={this.state.isMeasureView}
-                        onToggle={this.handleSimulate}
-                        style={{marginRight: '20px'}}
+                        onToggle={this.handleMeasureView}
+                        style={{marginRight: '20px',width: '100px'}}
                       />
+                      <ToolbarTitle className="ToolbarTitle" text="Flow" style={{overflow: 'visible'}} />
                       <Toggle
-                        label="Flow"
                         toggled={this.state.shouldSimulate}
                         onToggle={this.handleSimulate}
                       />
                     </ToolbarGroup>
                   </Toolbar>
                 </div>
-                <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
-                  <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
-                    <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
-                    <br />
-                    <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
-                  </Col>     
-                </Paper>
+                { !this.state.isMeasureView && (
+                  <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
+                    <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
+                      <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
+                      <br />
+                      <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
+                    </Col>     
+                  </Paper>
+                )}
               </div>
             </Col>
           </Row>
@@ -1208,7 +1219,7 @@ class ModelBuilder extends Component {
                             )
                           }
                           { 
-                            selectedType === 'Variable' && (
+                            (selectedType === 'Variable' || selectedType === 'Measure') && (
                               <div className="InfoLegendButton">
                                 <div>
                                   <FlatButton

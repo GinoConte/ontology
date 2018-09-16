@@ -3,6 +3,7 @@ import variableFile from './example2.csv';
 import linkFile from './links.csv';
 import referenceFile from './references.csv';
 import peopleFile from './people.csv';
+import measureFile from './measures.csv';
 
 function ImportData(callback) {
   const graph = {
@@ -113,4 +114,27 @@ function ImportPeople(callback) {
   });
 }
 
-export { ImportData, ImportReferences, ImportPeople };
+function ImportMeasures(callback) {
+  const graph = {
+    nodes: [],
+    links: [],
+    concepts: [],
+  };
+  csv(measureFile).then(function(data) {
+    for (const datapoint in data) {
+      const measure = data[datapoint];
+      if (measure['Measure ID']) {
+        graph.nodes.push({
+          id: measure['Measure ID'],
+          name: measure['Measure Name'],
+          reference: measure['Datasource-Reference'] || '',
+          value: 2,
+          color: "#ffa100",
+        });
+      }
+    }
+    return callback(graph) || null;
+  });
+}
+
+export { ImportData, ImportReferences, ImportPeople, ImportMeasures };
