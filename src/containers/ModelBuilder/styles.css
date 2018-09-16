@@ -22,7 +22,8 @@
 .GraphBackground {
   background-color: #ffe8bf;
   width: 1140px;
-  height: calc(100% + 300px);
+  /* height: calc(100% + 300px); */
+  height: 1015px;
   position: absolute;
   z-index: -1000;
 }

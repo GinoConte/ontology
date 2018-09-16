@@ -40,6 +40,7 @@ class ModelBuilder extends Component {
       highlightedLinks: [],
       highlightedNodes: [],
       isEditLinkOpen: false,
+      isMeasureView: false,
       newLinkInput: '',
       newVariableInput: '',
       selectedNodeID: '',
@@ -85,6 +86,7 @@ class ModelBuilder extends Component {
     this.handleLinkTypeFilter = this.handleLinkTypeFilter.bind(this);
     this.handleNodeClick = this.handleNodeClick.bind(this);
     this.handleSimulate = this.handleSimulate.bind(this);
+    this.handleMeasureView = this.handleMeasureView.bind(this);
     this.isNodeInConcept = this.isNodeInConcept.bind(this);
     this.onSaveToKB = this.onSaveToKB.bind(this);
     
@@ -572,8 +574,11 @@ class ModelBuilder extends Component {
   handleSimulate() {
     this.setState({
       shouldSimulate: !this.state.shouldSimulate,
-      alpha: this.state.alpha === 0.1 ? 0.01 : 0.1,
     });
+  }
+
+  handleMeasureView() {
+    this.setState({ isMeasureView: !isMeasureView });
   }
 
   isNodeInConcept(node) {
@@ -1065,12 +1070,18 @@ class ModelBuilder extends Component {
                         onChange={this.handleConceptMultiSelect}
                         options={conceptMultiSelectOptions || []}
                         placeholder="Concepts"
-                      />
+                      /> 
                     </ToolbarGroup>
                     <ToolbarGroup>
                     </ToolbarGroup>
                     <ToolbarGroup>
                       {/* <ToolbarSeparator /> */}
+                      <Toggle
+                        label="Measure"
+                        toggled={this.state.isMeasureView}
+                        onToggle={this.handleSimulate}
+                        style={{marginRight: '20px'}}
+                      />
                       <Toggle
                         label="Flow"
                         toggled={this.state.shouldSimulate}
@@ -1131,7 +1142,7 @@ class ModelBuilder extends Component {
                             <Col xs={6}>
                               <span className="InfoLegendItem filter">Link type</span>
                               <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
-                              <Checkbox label="Hypothesized" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
+                              <Checkbox label="Formulaic" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
                               <span className="InfoLegendItem filter">Show Unlinked</span>
                               <Checkbox label="Unlinked" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent} />
                             </Col>
