@@ -152,6 +152,7 @@ class ModelBuilder extends Component {
       const newData = {
         nodes: [...data.nodes, { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 }],
         links: [...data.links],
+        concepts: [...data.concepts] || [],
       }
       this.setState({
         data: newData,
@@ -192,6 +193,7 @@ class ModelBuilder extends Component {
     const newData = {
       nodes: [...filteredNodes],
       links: [...filteredLinks],
+      concepts: [...data.concepts] || [],
     };
     this.setState({
       data: newData,
@@ -210,6 +212,7 @@ class ModelBuilder extends Component {
     let newData = {
       nodes: [...data.nodes],
       links: [...data.links],
+      concepts: [...data.concepts] || [],
     }
     if (collapsedNodeObject.nodesRemoved) {
       newData.nodes = [...newData.nodes, ...collapsedNodeObject.nodesRemoved];
@@ -279,11 +282,10 @@ class ModelBuilder extends Component {
 
   handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
 
-  handleConceptMultiSelect(value, { action, removedValue }) {
+  handleConceptMultiSelect(value = [], { action, removedValue }) {
     const selectedConcepts = value;
     ImportData(data => {
-      if (isConceptNameSelected('All', selectedConcepts)) {
-        console.log('sleected all');
+      if (isConceptNameSelected('All', selectedConcepts) || value.length === 0) {
         return this.setState({ data });
       }
       let newData = {
@@ -922,12 +924,21 @@ class ModelBuilder extends Component {
             }}
             linkColor={link => {
 
-              if (focusedLinks.indexOf(link) > -1) {
-                return "rgba(228, 82, 75, 0.7)";
-              } else if (highlightedLinks.indexOf(link) > -1) {
-                return "rgba(255, 198, 40, 0.7)";
+              // if node is focused, grey everything else out
+              if (focusedLinks.length > 0) {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return link.color;
+                } else {
+                  return 'rgba(0,0,0,0.2)';
+                }       
               } else {
-                return link.color;
+                if (focusedLinks.indexOf(link) > -1) {
+                  return "rgba(228, 82, 75, 0.7)";
+                } else if (highlightedLinks.indexOf(link) > -1) {
+                  return "rgba(255, 198, 40, 0.7)";
+                } else {
+                  return link.color;
+                }
               }
             }}
             nodeLabel="name"
@@ -947,12 +958,20 @@ class ModelBuilder extends Component {
               if (this.state.shouldSimulate) {
                 return 4;
               }
-              if (focusedLinks.indexOf(link) > -1) {
-                return 4;
-              } else if (highlightedLinks.indexOf(link) > -1) {
-                return 4;
+              if (focusedLinks.length > 0) {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else {
+                  return 0;
+                }
               } else {
-                return 0;
+                if (focusedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else if (highlightedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else {
+                  return 0;
+                }
               }
             }}
             onNodeClick={this.handleNodeClick}
@@ -961,17 +980,34 @@ class ModelBuilder extends Component {
             nodeCanvasObject={(node, ctx, globalScale) => {
               let label = node.name;
               const fontSize = 12/globalScale;
+              let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
+              let isFocusedNode = focusedNodes.indexOf(node) > -1;
+
               ctx.font = `${fontSize}px Sans-Serif`;
               ctx.fillStyle = node.color;
               ctx.beginPath();
               ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
-              ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
+
+              if (focusedNodes.length > 0) {
+                if (isFocusedNode) {
+                  ctx.fillStyle = 'rgb(11, 179, 214)';
+                } else {
+                  ctx.fillStyle = 'rgba(150,150,150,1)';
+                }
+              } else {
+                if (isFocusedNode) {
+                  ctx.fillStyle = 'rgb(0,0,0)';
+                } else if (isHighlightedNode) {
+                  ctx.fillStyle = "rgb(255, 198, 40)";
+                } else {
+                  ctx.fillStyle = node.color;
+                }
+                ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
+              }
               ctx.fill();
 
-              let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
-              let isFocusedNode = focusedNodes.indexOf(node) > -1;
               if (isFocusedNode) {
-                ctx.strokeStyle = "rgb(228, 82, 75)";
+                ctx.strokeStyle = "rgb(0, 0, 0)";
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
               } else if (isHighlightedNode) {
