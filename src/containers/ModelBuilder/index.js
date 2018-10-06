@@ -173,6 +173,7 @@ class ModelBuilder extends Component {
       this.setState({
         focusedLinks: [],
         focusedNodes: [],
+        selectedNodeID: '',
       });
     }
   }
@@ -268,7 +269,7 @@ class ModelBuilder extends Component {
   }
 
   getReferenceFromID(nodeReferences = '') {
-    const referencesToFind = nodeReferences.replace(' ', '').split(',');
+    const referencesToFind = nodeReferences.replace(/ /g, '').split(',');
     const referencesFound = [];
     const { references } = this.state;
     for (const referenceToFind in referencesToFind) {
@@ -277,9 +278,6 @@ class ModelBuilder extends Component {
           referencesFound.push(references[reference]);
         }
       }
-    }
-    if (referencesFound.length > 1) {
-      console.log('large refernece', referencesFound);
     }
     return referencesFound;
   }
@@ -656,9 +654,7 @@ class ModelBuilder extends Component {
       'variable': selectedTitle,
       'weight': 0.75,
     });
-    // console.log('handle', addedVariables);
     this.setState({ addedVariables: newVariables });
-    // console.log(this.radar);
     // this.radar.state.chart.validateData();
   }
 
@@ -703,7 +699,6 @@ class ModelBuilder extends Component {
       let linkExists = false;
       newData.links.forEach((link, index) => {
         if ((link.target === sourceNode.id) && !linkExists) {
-          // console.log('found existing link');
           linkExists = true;
           newData.links[index].linkType = linkType;
           newData.links[index].linkOrigin = linkOrigin;

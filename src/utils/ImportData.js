@@ -40,7 +40,8 @@ function ImportData(callback) {
           concept_2: variable["Concept 2"] || '',
           concept_3: variable["Concept 3"] || '',
           value: references,
-          color: "rgba(11, 179, 214, 1)",
+          // color: "rgba(11, 179, 214, 1)",
+          color: "#0AE0DC"
         });
 
         if (graph.concepts.indexOf(variable["Concept 1"]) === -1 && variable["Concept 1"] !== '') {
