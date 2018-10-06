@@ -154,7 +154,7 @@ class ModelBuilder extends Component {
       const newData = {
         nodes: [...data.nodes, { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 }],
         links: [...data.links],
-        concepts: [...data.concepts] || [],
+        concepts: data.concepts ? [...data.concepts] : [],
       }
       this.setState({
         data: newData,
@@ -264,6 +264,9 @@ class ModelBuilder extends Component {
           referencesFound.push(references[reference]);
         }
       }
+    }
+    if (referencesFound.length > 1) {
+      console.log('large refernece', referencesFound);
     }
     return referencesFound;
   }
@@ -749,6 +752,7 @@ class ModelBuilder extends Component {
 
     let renderedNodeReferences;
     if (selectedNodeReferences) {
+      console.log('selected node', selectedNodeReferences);
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
         const authors = this.getAuthorsFromIDs(reference.authors) || [];
         const renderedAuthors = authors.map((author, index) => {
@@ -1000,7 +1004,7 @@ class ModelBuilder extends Component {
               ctx.font = `${fontSize}px Sans-Serif`;
               ctx.fillStyle = node.color;
               ctx.beginPath();
-              ctx.arc(node.x,node.y,node.value * 3, 0, 2*Math.PI);
+              ctx.arc(node.x,node.y,node.value * 3, 0, 2 * Math.PI);
 
               if (focusedNodes.length > 0) {
                 if (isFocusedNode) {
@@ -1037,7 +1041,12 @@ class ModelBuilder extends Component {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = "black";
-                ctx.fillText(label, node.x, node.y - 5);
+
+                let verticleOffset = node.value ? node.value * -4 : -5;
+                if (node.value === 1) {
+                  verticleOffset = -5;
+                }
+                ctx.fillText(label, node.x, node.y + verticleOffset);
               }
             }}
           />
@@ -1057,7 +1066,7 @@ class ModelBuilder extends Component {
     return (
       <React.Fragment>
         <Container className="Container" style={{minWidth: "960px"}}>
-          <div className="GraphBackground" />
+          {/* <div className="GraphBackground" /> */}
           {renderedTokenRedirect}
           <Row>
             {/* <Col xs={12}>

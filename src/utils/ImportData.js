@@ -22,6 +22,15 @@ function ImportData(callback) {
         variable["Concept 2"] = 'Macroeconomics';
       }
 
+      //scale value based on amount of references
+      let references = variable['Origin-Reference'] ? variable['Origin-Reference'].split(',').length : 0;
+      if (references === 0)
+        references = 1;
+
+      if (references > 1) {
+        console.log('large variables: ' + references, variable.name );
+      }
+
       if (variable.name) {
         graph.nodes.push({
           id: variable["variable ID"],
@@ -30,7 +39,7 @@ function ImportData(callback) {
           concept_1: variable["Concept 1"] || '',
           concept_2: variable["Concept 2"] || '',
           concept_3: variable["Concept 3"] || '',
-          value: 1,
+          value: references,
           color: "rgba(11, 179, 214, 1)",
         });
 
