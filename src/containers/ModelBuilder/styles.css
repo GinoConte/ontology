@@ -55,7 +55,7 @@
 }
 
 .ForceGraphContainer {
-  padding-left: calc((100% - 1000px) / 2);
+  /* padding-left: calc((100% - 1000px) / 2); */
 }
 
 .InfoContainer {

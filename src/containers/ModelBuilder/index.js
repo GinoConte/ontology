@@ -70,6 +70,7 @@ class ModelBuilder extends Component {
     }
 
     this.addNewNode = this.addNewNode.bind(this);
+    this.deselectNodes = this.deselectNodes.bind(this);
     this.collapseNode = this.collapseNode.bind(this);
     this.expandNode = this.expandNode.bind(this);
     this.getNodeFromID = this.getNodeFromID.bind(this);
@@ -145,6 +146,9 @@ class ModelBuilder extends Component {
     if (this.forceGraphRef) {
       console.log('ref', this.forceGraphRef);
     }
+
+    // add esc event listener
+    document.addEventListener('keydown', this.deselectNodes);
   }
 
   addNewNode(e) {
@@ -162,6 +166,15 @@ class ModelBuilder extends Component {
         // alpha: this.state.alpha + 1,
       })
     };
+  }
+
+  deselectNodes(event) {
+    if (event.code === 'Escape') {
+      this.setState({
+        focusedLinks: [],
+        focusedNodes: [],
+      });
+    }
   }
 
   collapseNode(nodeID) {
@@ -326,8 +339,9 @@ class ModelBuilder extends Component {
     const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
     
     //handle focus
-    let { isMeasureView, focusedNodes, focusedLinks } = this.state || [];
-    if (focusedNodes.indexOf(selectedNode) > -1) {
+    let { isMeasureView, focusedNodes, focusedLinks, selectedNodeID } = this.state || [];
+
+    if (selectedNode.id == selectedNodeID) {
       focusedLinks = [];
       focusedNodes = [];
     } else {
@@ -752,7 +766,6 @@ class ModelBuilder extends Component {
 
     let renderedNodeReferences;
     if (selectedNodeReferences) {
-      console.log('selected node', selectedNodeReferences);
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
         const authors = this.getAuthorsFromIDs(reference.authors) || [];
         const renderedAuthors = authors.map((author, index) => {
@@ -925,14 +938,14 @@ class ModelBuilder extends Component {
 
     // render the graph
     let renderedForceGraph = (
-      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px"}}>
+      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
           <ForceGraph2D
             enableNodeDrag
             graphData={data}
             linkCurvature={0}
             nodeResolution={16}
             linkResolution={16}
-            width={1000}
+            width={1100}
             linkWidth={link => {
               if (highlightedLinks.indexOf(link) > -1 || focusedLinks.indexOf(link) > -1) {
                 return "4";
