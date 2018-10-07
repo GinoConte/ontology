@@ -143,8 +143,10 @@ class ModelBuilder extends Component {
       });
     });
     
+    // position the canvas on load
     if (this.forceGraphRef) {
-      console.log('ref', this.forceGraphRef);
+      this.forceGraphRef.zoom(4,100);
+      this.forceGraphRef.centerAt(0, -20);
     }
 
     // add esc event listener
@@ -279,7 +281,6 @@ class ModelBuilder extends Component {
         }
       }
     }
-    console.log('references', referencesFound);
     return referencesFound;
   }
 
@@ -779,7 +780,6 @@ class ModelBuilder extends Component {
 
     let renderedNodeReferences;
     if (selectedNodeReferences) {
-      console.log('selectedNode', selectedNodeReferences);
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
         const authors = this.getAuthorsFromIDs(reference.authors) || [];
         const renderedAuthors = authors.map((author, index) => {
@@ -955,6 +955,7 @@ class ModelBuilder extends Component {
       <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
           <ForceGraph2D
             enableNodeDrag
+            ref={el => { this.forceGraphRef = el; }}
             graphData={data}
             linkCurvature={link => { return link.curvature; }}
             nodeResolution={16}
