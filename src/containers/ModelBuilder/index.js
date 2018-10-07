@@ -279,6 +279,7 @@ class ModelBuilder extends Component {
         }
       }
     }
+    console.log('references', referencesFound);
     return referencesFound;
   }
 
@@ -404,30 +405,43 @@ class ModelBuilder extends Component {
     this.setState({ highlightedNodes, highlightedLinks });
   }
 
-  handleLinkClick(sourceID, targetID) {
-    const nodes = this.state.data.nodes;
-    const sourceNode = nodes.find(function (node) { return node.id === sourceID; });
-    const targetNode = nodes.find(function (node) { return node.id === targetID; });
-    const links = this.state.data.links;
-    const selectedLink = links.find(function (link) { 
-      return ((link.source === sourceID && link.target === targetID)
-        || (link.source === targetID && link.target === sourceID)); 
-    });
-
+  handleLinkClick(link) {
     this.setState({
       selectedType: 'Link',
-      selectedTitle: sourceNode.name + ' ⟶ ' + targetNode.name,
-      selectedLinkType: selectedLink.linkType,
-      selectedLinkOrigin: this.getReferenceFromID(selectedLink.linkOrigin),
-      selectedLinkReference: selectedLink.reference || '',
-      selectedLinkModel: selectedLink.model || '',
-      selectedLinkTargetTitle: targetNode.name,
+      selectedTitle: link.source.name + ' ⟶ ' + link.target.name,
+      selectedLinkType: link.linkType,
+      selectedLinkOrigin: link.linkOrigin,
+      selectedNodeReferences: this.getReferenceFromID(link.reference) || [],
+      selectedLinkModel: link.model || '',
+      selectedLinkTargetTitle: link.target.name,
       selectedNodeLinks: [],
-      selectedNodeReferences: [],
+      focusedLinks: [],
+      focusedNodes: [],
     })
-    // const souNode = nodes.find(function (node) { return node.id === nodeID; });
-
   }
+  
+  // handleLinkClick(sourceID, targetID) {
+  //   const nodes = this.state.data.nodes;
+  //   const sourceNode = nodes.find(function (node) { return node.id === sourceID; });
+  //   const targetNode = nodes.find(function (node) { return node.id === targetID; });
+  //   const links = this.state.data.links;
+  //   const selectedLink = links.find(function (link) { 
+  //     return ((link.source === sourceID && link.target === targetID)
+  //       || (link.source === targetID && link.target === sourceID)); 
+  //   });
+
+  //   this.setState({
+  //     selectedType: 'Link',
+  //     selectedTitle: sourceNode.name + ' ⟶ ' + targetNode.name,
+  //     selectedLinkType: selectedLink.linkType,
+  //     selectedLinkOrigin: this.getReferenceFromID(selectedLink.linkOrigin),
+  //     selectedLinkReference: selectedLink.reference || '',
+  //     selectedLinkModel: selectedLink.model || '',
+  //     selectedLinkTargetTitle: targetNode.name,
+  //     selectedNodeLinks: [],
+  //     selectedNodeReferences: [],
+  //   })
+  // }
 
   handleLinkTypeFilter(e) {
     const isToggleOff = !e.target.checked;
@@ -764,6 +778,7 @@ class ModelBuilder extends Component {
 
     let renderedNodeReferences;
     if (selectedNodeReferences) {
+      console.log('selectedNode', selectedNodeReferences);
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
         const authors = this.getAuthorsFromIDs(reference.authors) || [];
         const renderedAuthors = authors.map((author, index) => {
@@ -1009,6 +1024,7 @@ class ModelBuilder extends Component {
             onNodeClick={this.handleNodeClick}
             onNodeHover={this.handleNodeHover}
             onLinkHover={this.handleLinkHover}
+            onLinkClick={this.handleLinkClick}
             nodeCanvasObject={(node, ctx, globalScale) => {
               let label = node.name.toUpperCase();
               const fontSize = 12/globalScale;
@@ -1211,18 +1227,18 @@ class ModelBuilder extends Component {
                                 <Row>
                                   <Col xs={2}>
                                     <div className="LinksTo">Type</div>
-                                    <div className="LinksTo">Origin</div>
-                                    <div className="LinksTo">Reference</div>
-                                    <div className="LinksTo">Model</div>
+                                    { originString && <div className="LinksTo">Origin</div> }
+                                    { modelString && <div className="LinksTo">Model</div> }
+                                    { renderedNodeReferences && renderedNodeReferences.length > 0 && <div className="LinksTo">Ref.</div> }
                                   </Col>
                                   <Col xs={8}>
-                                    {influenceString}
+                                    { influenceString }
                                     <br />
-                                    {originString}
-                                    <br />
-                                    {referenceString}
-                                    <br />
-                                    {modelString}
+                                    { originString }
+                                    { originString && <br /> }
+                                    { modelString }
+                                    { originString && <br /> }
+                                    { renderedNodeReferences && renderedNodeReferences.length > 0 && renderedNodeReferences }
                                   </Col>
                                   <Col xs={2} />
                                 </Row>
@@ -1230,7 +1246,7 @@ class ModelBuilder extends Component {
                             )
                           }
                           {
-                            renderedNodeReferences && renderedNodeReferences.length > 0 && (
+                            selectedType !== 'Link' && renderedNodeReferences && renderedNodeReferences.length > 0 && (
                               <div className="InfoLegendLinks">
                                 <Row>
                                   <Col xs={2}>
