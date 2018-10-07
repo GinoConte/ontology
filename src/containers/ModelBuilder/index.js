@@ -328,6 +328,9 @@ class ModelBuilder extends Component {
 
       this.setState({
         data: newData,
+        focusedNodes: [],
+        focusedLinks: [],
+        selectedNodeID: '',
       });
 
     });
@@ -951,7 +954,7 @@ class ModelBuilder extends Component {
             linkColor={link => {
 
               // if node is focused, grey everything else out
-              if (focusedLinks.length > 0) {
+              if (focusedLinks.length > 0 || focusedNodes.length > 0) {
                 if (focusedLinks.indexOf(link) > -1) {
                   return link.color;
                 } else {
@@ -1047,6 +1050,7 @@ class ModelBuilder extends Component {
                   label = label.slice(0,20) + '...';
                 }
                 ctx.textAlign = 'center';
+                ctx.fontFamily = 'Roboto';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = "black";
 

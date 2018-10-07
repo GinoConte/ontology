@@ -27,10 +27,6 @@ function ImportData(callback) {
       if (references === 0)
         references = 1;
 
-      if (references > 1) {
-        console.log('large variables: ' + references, variable.name );
-      }
-
       if (variable.name) {
         graph.nodes.push({
           id: variable["variable ID"],
