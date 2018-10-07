@@ -77,9 +77,36 @@ function importLinks(callback) {
           linkOrigin: link['Link Origin - Ref'] ? 'via reference' : 'via model',
           reference: link['Link Origin - Ref'] || '',
           model: link['Link Origin - Model'] || '',
+          curvature: 0,
         });
       }
     }
+
+
+    //check links for duplicate
+    links.forEach(link => {
+      let matchesFound = 0;
+      links.forEach(otherLink => {
+        if (link.source === otherLink.source && link.target === otherLink.target) {
+          matchesFound++;
+        }
+      })
+      if (matchesFound > 1) {
+        link.curvature = 0.3;
+        link.thickness = 1;
+      }
+    });
+
+    // inverse links for double linked
+    const rotatedLinks = [];
+    for (const link of links) {
+      if (link.curvature > 0 && rotatedLinks.indexOf(`${link.source} ${link.target}`) === -1) {
+        link.curvature = -0.3;
+        link.thickness = 1;
+        rotatedLinks.push(`${link.source} ${link.target}`);
+      }
+    }
+
     return callback(links) || null;
   });
 }

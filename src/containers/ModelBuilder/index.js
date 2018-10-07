@@ -940,11 +940,14 @@ class ModelBuilder extends Component {
           <ForceGraph2D
             enableNodeDrag
             graphData={data}
-            linkCurvature={0}
+            linkCurvature={link => { return link.curvature; }}
             nodeResolution={16}
             linkResolution={16}
             width={1100}
             linkWidth={link => {
+              if (link.thickness === 1) {
+                return 1;
+              }
               if (highlightedLinks.indexOf(link) > -1 || focusedLinks.indexOf(link) > -1) {
                 return "4";
               } else {
@@ -1037,11 +1040,7 @@ class ModelBuilder extends Component {
               }
               ctx.fill();
 
-              if (selectedNodeID === node.id) {
-                ctx.strokeStyle = "rgb(0, 0, 0)";
-                ctx.lineWidth = 0.5;
-                ctx.stroke();
-              } else if (isFocusedNode) {
+              if (isFocusedNode) {
                 ctx.strokeStyle = "rgb(0, 0, 0)";
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
