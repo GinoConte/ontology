@@ -1,4 +1,4 @@
-Model ID,Mode Name,Model Type,R code,Training Set,Coefficients,Confidence intervals
+Model ID,Model Name,Model Type,R code,Training Set,Coefficients,Confidence intervals
 SMID0001,House demand predictor by Mankiw,Regression,,,,
 SMID0002,House price predictor by Mankiw,Regression,,,,
 SMID0003,impact of monetary policy on house price,Var models,,,,

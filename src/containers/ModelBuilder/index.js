@@ -59,6 +59,7 @@ class ModelBuilder extends Component {
       isCheckedIndependent: true,
       isCheckedDependent: true,
       isReferenceModalOpen: false,
+      isModelModalOpen: false,
       weightValues: {
         // Conversation: 0.5,
       },
@@ -77,6 +78,7 @@ class ModelBuilder extends Component {
     this.getNodeFromName = this.getNodeFromName.bind(this);
     this.getLinksToNode = this.getLinksToNode.bind(this);
     this.getReferenceFromID = this.getReferenceFromID.bind(this);
+    this.getModelsFromIDs = this.getModelsFromIDs.bind(this);
     this.getAuthorsFromIDs = this.getAuthorsFromIDs.bind(this);
     this.handleAddVariable = this.handleAddVariable.bind(this);
     this.handleDropDownChange = this.handleDropDownChange.bind(this);
@@ -98,6 +100,7 @@ class ModelBuilder extends Component {
     this.toggleEditLink = this.toggleEditLink.bind(this);
     this.submitEditLink = this.submitEditLink.bind(this);
     this.toggleReferenceModal = this.toggleReferenceModal.bind(this);
+    this.toggleModelModal = this.toggleModelModal.bind(this);
 
     //input
     this.handleNewVariableInputChange = this.handleNewVariableInputChange.bind(this);
@@ -290,6 +293,20 @@ class ModelBuilder extends Component {
     return referencesFound;
   }
 
+  getModelsFromIDs(modelIDs = '') {
+    const modelsToFind = modelIDs.replace(/ /g, '').split(',');
+    const modelsFound = [];
+    const { models } = this.state;
+    for (const modelToFind in modelsToFind) {
+      for (const model in models) {
+        if (modelsToFind[modelToFind] === models[model].id) {
+          modelsFound.push(models[model]);
+        }
+      }
+    }
+    return modelsFound;
+  }
+
   getAuthorsFromIDs(authorsString = '') {
     const authorsToFind = authorsString.replace(' ', '').split(',');
     const authorsFound = [];
@@ -420,6 +437,7 @@ class ModelBuilder extends Component {
       selectedLinkType: link.linkType,
       selectedLinkOrigin: link.linkOrigin,
       selectedNodeReferences: this.getReferenceFromID(link.reference) || [],
+      selectedLinkModels: this.getModelsFromIDs(link.model) || [],
       selectedLinkModel: link.model || '',
       selectedLinkTargetTitle: link.target.name,
       selectedNodeLinks: [],
@@ -731,6 +749,10 @@ class ModelBuilder extends Component {
     this.setState({ isReferenceModalOpen: !this.state.isReferenceModalOpen });
   }
 
+  toggleModelModal() {
+    this.setState({ isModelModalOpen: !this.state.isModelModalOpen });
+  }
+
   render() {
 
     const {
@@ -743,8 +765,9 @@ class ModelBuilder extends Component {
       highlightedNodes,
       newVariableInput,
       selectedNodeID,
-      selectedNodeLinks,
+      selectedLinkModels,
       selectedNodeReferences,
+      selectedModels,
       selectedTitle,
       selectedType,
       shouldSimulate,
@@ -790,6 +813,30 @@ class ModelBuilder extends Component {
                     </div>
                   )
                 }
+              </div>
+            </Dialog>
+          </div>
+        );
+      });
+    }
+
+    let renderedModels;
+    if (selectedLinkModels) {
+      renderedModels = selectedLinkModels.map((model, index) => {
+        return (
+          <div className="NodeReference" onClick={this.toggleModelModal}>
+            <span style={{textDecoration: 'underline'}}>{model.id}:</span><span>&nbsp;{model.name}</span>
+            <Dialog
+              title="Reference Details"
+              actions={editLinkActions}
+              modal={false}
+              open={this.state.isModelModalOpen}
+              onRequestClose={this.toggleModelModal}
+            >
+              <div className="ModalContent">
+                <p><i>{model.name}</i></p>
+                <p>ID: {model.id}</p>
+                <div> <p>Model Type: {model.type} </p> </div>
               </div>
             </Dialog>
           </div>
@@ -1213,7 +1260,7 @@ class ModelBuilder extends Component {
                                   <Col xs={2}>
                                     <div className="LinksTo">Type</div>
                                     { originString && <div className="LinksTo">Origin</div> }
-                                    { modelString && <div className="LinksTo">Model</div> }
+                                    { renderedNodeReferences && renderedNodeReferences.length > 0 && <div className="LinksTo">Model</div> }
                                     { renderedNodeReferences && renderedNodeReferences.length > 0 && <div className="LinksTo">Ref.</div> }
                                   </Col>
                                   <Col xs={8}>
@@ -1221,8 +1268,7 @@ class ModelBuilder extends Component {
                                     <br />
                                     { originString }
                                     { originString && <br /> }
-                                    { modelString }
-                                    { originString && <br /> }
+                                    { renderedModels && renderedModels.length > 0 && renderedModels }
                                     { renderedNodeReferences && renderedNodeReferences.length > 0 && renderedNodeReferences }
                                   </Col>
                                   <Col xs={2} />
