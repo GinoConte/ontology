@@ -362,12 +362,12 @@ class ModelBuilder extends Component {
   }
 
   handleNodeClick(clickedNode) {
-    const selectedNode = clickedNode; //nodes.find(function (node) { return clickedNode.id === node.id; });
+    const selectedNode = clickedNode;
     
     //handle focus
     let { isMeasureView, focusedNodes, focusedLinks, selectedNodeID } = this.state || [];
 
-    if (selectedNode.id == selectedNodeID) {
+    if (selectedNode.id == selectedNodeID) { // this is the deselect case
       focusedLinks = [];
       focusedNodes = [];
     } else {
@@ -388,7 +388,7 @@ class ModelBuilder extends Component {
     this.setState({
       focusedNodes,
       focusedLinks,
-      selectedNodeID: selectedNode.id,
+      selectedNodeID: focusedLinks.length === 0 ? '' : selectedNode.id, // if deselect, remove node id
       selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
       selectedTitle: selectedNode.name,
       selectedType: isMeasureView ? 'Measure' : 'Variable',
@@ -441,8 +441,10 @@ class ModelBuilder extends Component {
       selectedLinkModel: link.model || '',
       selectedLinkTargetTitle: link.target.name,
       selectedNodeLinks: [],
-      focusedLinks: focusedLinks.indexOf(link) >= -1 ? this.state.focusedLinks : [],
-      focusedNodes: focusedLinks.indexOf(link) >= -1 ? this.state.focusedNodes : [],
+      // focusedLinks: focusedLinks.indexOf(link) >= -1 ? this.state.focusedLinks : [],
+      // focusedNodes: focusedLinks.indexOf(link) >= -1 ? this.state.focusedNodes : [],
+      focusedNodes: [link.target, link.source],
+      focusedLinks: [link],
     })
   }
 
@@ -1021,7 +1023,7 @@ class ModelBuilder extends Component {
               }
             }}
             nodeLabel="name"
-            linkLabel="linkOrigin"
+            linkLabel="id"
             backgroundColor="transparent"
             // backgroundColor="rgba(0,0,0,0.9)"
             // linkCurvature={link => {
