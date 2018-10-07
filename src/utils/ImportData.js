@@ -2,6 +2,7 @@ import { csv } from 'd3-fetch';
 import variableFile from './example2.csv';
 import linkFile from './links.csv';
 import referenceFile from './references.csv';
+import modelFile from  './models.csv';
 import peopleFile from './people.csv';
 import measureFile from './measures.csv';
 
@@ -128,6 +129,23 @@ function ImportReferences(callback) {
   });
 }
 
+function ImportModels(callback) {
+  const models = [];
+  csv(modelFile).then(function(data) {
+    for (const datapoint in data) {
+      const model = data[datapoint];
+      if (model['Model Name']) {
+        models.push({
+          id: model['Model ID'],
+          name: model['Model Name'],
+          type: model['Model Type'],
+        });
+      }
+    }
+    return callback(models) || null;
+  });
+}
+
 function ImportPeople(callback) {
   const people = [];
   csv(peopleFile).then(function(data) {
@@ -170,4 +188,4 @@ function ImportMeasures(callback) {
   });
 }
 
-export { ImportData, ImportReferences, ImportPeople, ImportMeasures };
+export { ImportData, ImportReferences, ImportModels, ImportPeople, ImportMeasures };

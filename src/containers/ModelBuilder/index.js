@@ -18,7 +18,7 @@ import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
-import { ImportData, ImportReferences, ImportMeasures, ImportPeople } from '../../utils/ImportData';
+import { ImportData, ImportReferences, ImportMeasures, ImportPeople, ImportModels } from '../../utils/ImportData';
 import { isConceptNameSelected } from '../../utils/ConceptUtils';
 
 class ModelBuilder extends Component {
@@ -134,6 +134,12 @@ class ModelBuilder extends Component {
     ImportReferences(references => {
       this.setState({
         references,
+      });
+    });
+
+    ImportModels(models => {
+      this.setState({
+        models,
       });
     });
 
@@ -421,29 +427,6 @@ class ModelBuilder extends Component {
       focusedNodes: focusedLinks.indexOf(link) >= -1 ? this.state.focusedNodes : [],
     })
   }
-  
-  // handleLinkClick(sourceID, targetID) {
-  //   const nodes = this.state.data.nodes;
-  //   const sourceNode = nodes.find(function (node) { return node.id === sourceID; });
-  //   const targetNode = nodes.find(function (node) { return node.id === targetID; });
-  //   const links = this.state.data.links;
-  //   const selectedLink = links.find(function (link) { 
-  //     return ((link.source === sourceID && link.target === targetID)
-  //       || (link.source === targetID && link.target === sourceID)); 
-  //   });
-
-  //   this.setState({
-  //     selectedType: 'Link',
-  //     selectedTitle: sourceNode.name + ' ⟶ ' + targetNode.name,
-  //     selectedLinkType: selectedLink.linkType,
-  //     selectedLinkOrigin: this.getReferenceFromID(selectedLink.linkOrigin),
-  //     selectedLinkReference: selectedLink.reference || '',
-  //     selectedLinkModel: selectedLink.model || '',
-  //     selectedLinkTargetTitle: targetNode.name,
-  //     selectedNodeLinks: [],
-  //     selectedNodeReferences: [],
-  //   })
-  // }
 
   handleLinkTypeFilter(e) {
     const isToggleOff = !e.target.checked;
