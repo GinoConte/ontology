@@ -1007,18 +1007,20 @@ class ModelBuilder extends Component {
             onNodeHover={this.handleNodeHover}
             onLinkHover={this.handleLinkHover}
             nodeCanvasObject={(node, ctx, globalScale) => {
-              let label = node.name;
+              let label = node.name.toUpperCase();
               const fontSize = 12/globalScale;
               let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
               let isFocusedNode = focusedNodes.indexOf(node) > -1;
 
-              ctx.font = `${fontSize}px Sans-Serif`;
+              ctx.font = `500 ${fontSize}px Roboto Sans-Serif`;
               ctx.fillStyle = node.color;
               ctx.beginPath();
               ctx.arc(node.x,node.y,node.value * 3, 0, 2 * Math.PI);
 
               if (focusedNodes.length > 0) {
-                if (isFocusedNode) {
+                if (selectedNodeID === node.id) {
+                  ctx.fillStyle = '#9cfcfa';
+                } else if (isFocusedNode) {
                   ctx.fillStyle = node.color;
                 } else {
                   ctx.fillStyle = 'rgba(150,150,150,1)';
@@ -1035,7 +1037,11 @@ class ModelBuilder extends Component {
               }
               ctx.fill();
 
-              if (isFocusedNode) {
+              if (selectedNodeID === node.id) {
+                ctx.strokeStyle = "rgb(0, 0, 0)";
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+              } else if (isFocusedNode) {
                 ctx.strokeStyle = "rgb(0, 0, 0)";
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
@@ -1050,7 +1056,7 @@ class ModelBuilder extends Component {
                   label = label.slice(0,20) + '...';
                 }
                 ctx.textAlign = 'center';
-                ctx.fontFamily = 'Roboto';
+                // ctx.font = '26px Roboto';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = "black";
 
