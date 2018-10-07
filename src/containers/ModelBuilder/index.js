@@ -406,6 +406,7 @@ class ModelBuilder extends Component {
   }
 
   handleLinkClick(link) {
+    const { focusedLinks } = this.state;
     this.setState({
       selectedType: 'Link',
       selectedTitle: link.source.name + ' ⟶ ' + link.target.name,
@@ -415,8 +416,8 @@ class ModelBuilder extends Component {
       selectedLinkModel: link.model || '',
       selectedLinkTargetTitle: link.target.name,
       selectedNodeLinks: [],
-      focusedLinks: [],
-      focusedNodes: [],
+      focusedLinks: focusedLinks.indexOf(link) >= -1 ? this.state.focusedLinks : [],
+      focusedNodes: focusedLinks.indexOf(link) >= -1 ? this.state.focusedNodes : [],
     })
   }
   
