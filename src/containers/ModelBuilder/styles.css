@@ -94,6 +94,14 @@
   /* border: 2px solid black; */
 }
 
+.InfoLegendLinks.link.formulaic {
+  background-color: rgba(228, 82, 75, 0.3);
+}
+
+.InfoLegendLinks.link.causal {
+  background-color: rgba(131, 198, 72, 0.3);
+}
+
 .InfoLegendItem.type {
   text-decoration: underline;
   opacity: 0.4;

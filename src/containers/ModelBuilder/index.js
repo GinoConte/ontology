@@ -52,6 +52,7 @@ class ModelBuilder extends Component {
       data: { nodes: [], links: [] },
       dropdownValue: 1,
       isCheckedCausal: true,
+      isCheckedFormulaic: true,
       isCheckedHypothesis: true,
       isCheckedModel: true,
       isCheckedOpinion: true,
@@ -60,6 +61,7 @@ class ModelBuilder extends Component {
       isCheckedDependent: true,
       isReferenceModalOpen: false,
       isModelModalOpen: false,
+      hasBeenInteractedWith: false,
       weightValues: {
         // Conversation: 0.5,
       },
@@ -92,6 +94,7 @@ class ModelBuilder extends Component {
     this.handleMeasureView = this.handleMeasureView.bind(this);
     this.isNodeInConcept = this.isNodeInConcept.bind(this);
     this.onSaveToKB = this.onSaveToKB.bind(this);
+    this.handleInteraction = this.handleInteraction.bind(this)
     
     //modal
     this.handleLinkTypeChange = this.handleLinkTypeChange.bind(this);
@@ -107,6 +110,7 @@ class ModelBuilder extends Component {
 
     //checkboxes
     this.handleCheckedCausal = this.handleCheckedCausal.bind(this);
+    this.handleCheckedFormulaic = this.handleCheckedFormulaic.bind(this);
     this.handleCheckedHypothesis = this.handleCheckedHypothesis.bind(this);
     this.handleCheckedModel = this.handleCheckedModel.bind(this);
     this.handleCheckedOpinion = this.handleCheckedOpinion.bind(this);
@@ -321,6 +325,10 @@ class ModelBuilder extends Component {
     return authorsFound;
   }
 
+  handleInteraction() {
+    this.setState({ hasBeenInteractedWith: true });
+  }
+
   handleDropDownChange = (event, index, dropdownValue) => this.setState({dropdownValue});
 
   handleConceptMultiSelect(value = [], { action, removedValue }) {
@@ -356,6 +364,7 @@ class ModelBuilder extends Component {
         focusedNodes: [],
         focusedLinks: [],
         selectedNodeID: '',
+        hasBeenInteractedWith: false,
       });
 
     });
@@ -363,7 +372,7 @@ class ModelBuilder extends Component {
 
   handleNodeClick(clickedNode) {
     const selectedNode = clickedNode;
-    
+
     //handle focus
     let { isMeasureView, focusedNodes, focusedLinks, selectedNodeID } = this.state || [];
 
@@ -396,6 +405,7 @@ class ModelBuilder extends Component {
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
       selectedNodeLinks: this.getLinksToNode(selectedNode.id),
+      hasBeenInteractedWith: true,
     });
   }
 
@@ -441,8 +451,7 @@ class ModelBuilder extends Component {
       selectedLinkModel: link.model || '',
       selectedLinkTargetTitle: link.target.name,
       selectedNodeLinks: [],
-      // focusedLinks: focusedLinks.indexOf(link) >= -1 ? this.state.focusedLinks : [],
-      // focusedNodes: focusedLinks.indexOf(link) >= -1 ? this.state.focusedNodes : [],
+      selectedNodeID: '',
       focusedNodes: [link.target, link.source],
       focusedLinks: [link],
     })
@@ -505,6 +514,32 @@ class ModelBuilder extends Component {
     this.setState({
       isCheckedCausal: !this.state.isCheckedCausal,
       data: newData,
+      hasBeenInteractedWith: false,
+    });
+  }
+
+  handleCheckedFormulaic() {
+    const { data } = this.state;
+    let newData = {}
+
+    if (this.state.isCheckedFormulaic) {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.links.filter(link => link.linkType !== 'Formula'),
+        removedLinksFormulaic: data.links.filter(link => link.linkType === 'Formula'),
+      }
+    } else {
+      newData = {
+        nodes: [...data.nodes],
+        links: [...data.links, ...data.removedLinksFormulaic],
+        removedLinksFormulaic: [],
+      }
+    }
+
+    this.setState({
+      isCheckedFormulaic: !this.state.isCheckedFormulaic,
+      data: newData,
+      hasBeenInteractedWith: false,
     });
   }
 
@@ -529,6 +564,7 @@ class ModelBuilder extends Component {
     this.setState({
       isCheckedIndependent: !this.state.isCheckedIndependent,
       data: newData,
+      hasBeenInteractedWith: false,
     });
   }
 
@@ -581,6 +617,7 @@ class ModelBuilder extends Component {
     this.setState({
       isCheckedDependent: !this.state.isCheckedDependent,
       data: newData,
+      hasBeenInteractedWith: false,
     });
   }
 
@@ -992,6 +1029,7 @@ class ModelBuilder extends Component {
             linkCurvature={link => { return link.curvature; }}
             nodeResolution={16}
             linkResolution={16}
+            cooldownTime={this.state.hasBeenInteractedWith ? 100 : 15000}
             width={1100}
             linkWidth={link => {
               if (link.thickness === 1) {
@@ -1022,17 +1060,9 @@ class ModelBuilder extends Component {
                 }
               }
             }}
-            nodeLabel="name"
+            nodeLabel=""
             linkLabel="id"
             backgroundColor="transparent"
-            // backgroundColor="rgba(0,0,0,0.9)"
-            // linkCurvature={link => {
-            //   if (this.state.shouldSimulate) {
-            //     return 0.3;
-            //   } else {
-            //     return 0;
-            //   }
-            // }}
             linkDirectionalParticles={1}
             linkDirectionalParticleWidth={link => {
               // show all when toggled
@@ -1056,6 +1086,7 @@ class ModelBuilder extends Component {
               }
             }}
             onNodeClick={this.handleNodeClick}
+            onNodeDrag={this.handleInteraction}
             onNodeHover={this.handleNodeHover}
             onLinkHover={this.handleLinkHover}
             onLinkClick={this.handleLinkClick}
@@ -1105,7 +1136,6 @@ class ModelBuilder extends Component {
                   label = label.slice(0,20) + '...';
                 }
                 ctx.textAlign = 'center';
-                // ctx.font = '26px Roboto';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = "black";
 
@@ -1113,6 +1143,7 @@ class ModelBuilder extends Component {
                 if (node.value === 1) {
                   verticleOffset = -5;
                 }
+                ctx.maxWidth = 20;
                 ctx.fillText(label, node.x, node.y + verticleOffset);
               }
             }}
@@ -1178,9 +1209,9 @@ class ModelBuilder extends Component {
                 { !this.state.isMeasureView && (
                   <Paper className="Legend" style={{paddingBottom: '5px',backgroundColor: 'rgba(255,255,255,0.4)'}}>
                     <Col xs={12} style={{paddingTop: '5px',textAlign: 'left'}}>
-                      <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red line:</span> Formulaic link
+                      <span style={{color: 'rgba(228, 82, 75, 1)'}}>Red link:</span> Formulaic link
                       <br />
-                      <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green line:</span> Causal link
+                      <span style={{color: 'rgba(131, 198, 72, 1)'}}>Green link:</span> Causal link
                     </Col>     
                   </Paper>
                 )}
@@ -1229,7 +1260,7 @@ class ModelBuilder extends Component {
                             <Col xs={6}>
                               <span className="InfoLegendItem filter">Link type</span>
                               <Checkbox label="Causal" checked={this.state.isCheckedCausal} onCheck={this.handleCheckedCausal}  />
-                              <Checkbox label="Formulaic" checked={this.state.isCheckedHypothesis} onCheck={this.handleCheckedHypothesis} />
+                              <Checkbox label="Formulaic" checked={this.state.isCheckedFormulaic} onCheck={this.handleCheckedFormulaic} />
                               <span className="InfoLegendItem filter">Show Unlinked</span>
                               <Checkbox label="Unlinked" checked={this.state.isCheckedIndependent} onCheck={this.handleCheckedIndependent} />
                             </Col>
@@ -1257,12 +1288,12 @@ class ModelBuilder extends Component {
                           </div>
                           {
                             selectedType === 'Link' && (
-                              <div className="InfoLegendLinks">
+                              <div className={`InfoLegendLinks link ${influenceString === 'Causal' ? 'causal' : 'formulaic'}`}>
                                 <Row>
                                   <Col xs={2}>
                                     <div className="LinksTo">Type</div>
                                     { originString && <div className="LinksTo">Origin</div> }
-                                    { renderedNodeReferences && renderedNodeReferences.length > 0 && <div className="LinksTo">Model</div> }
+                                    { renderedModels && renderedModels.length > 0 && <div className="LinksTo">Model</div> }
                                     { renderedNodeReferences && renderedNodeReferences.length > 0 && <div className="LinksTo">Ref.</div> }
                                   </Col>
                                   <Col xs={8}>
