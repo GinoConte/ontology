@@ -170,16 +170,22 @@ class ModelBuilder extends Component {
     e.preventDefault();
     if (this.state.newVariableInput.length > 0) {
       const { data } = this.state;
+      const newNode = { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 };
       const newData = {
-        nodes: [...data.nodes, { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 }],
+        nodes: [...data.nodes, newNode],
         links: [...data.links],
         concepts: data.concepts ? [...data.concepts] : [],
       }
       this.setState({
         data: newData,
         newVariableInput: '',
-        // alpha: this.state.alpha + 1,
-      })
+        focusedLinks: [],
+        focusedNodes: [newNode],
+        hasBeenInteractedWith: false,
+      }, success => {
+        this.handleNodeClick(newNode);
+      });
+      
     };
   }
 
@@ -226,6 +232,14 @@ class ModelBuilder extends Component {
       links: [...filteredLinks],
       concepts: [...data.concepts] || [],
     };
+
+    // get the node thats been collapsed to
+    newData.nodes.forEach(node => {
+      if (node.id === nodeID) {
+        node.value = node.value + 1.5;
+      }
+    });
+
     this.setState({
       data: newData,
       collapsedNodes: [...collapsedNodes, { nodeid: nodeID, nodesRemoved: nodesToRemove }],
@@ -251,10 +265,19 @@ class ModelBuilder extends Component {
     if (collapsedLinkObject.linksRemoved) {
       newData.links = [...newData.links, ...collapsedLinkObject.linksRemoved];
     }
+
+    // get the node thats been collapsed to
+    newData.nodes.forEach(node => {
+      if (node.id === nodeID) {
+        node.value = node.references;
+      }
+    });
+
     this.setState({
       data: newData,
       collapsedNodes: [...collapsedNodes.filter(cluster => cluster.nodeid !== nodeID)],
       collapsedLinks: [...collapsedLinks.filter(cluster => cluster.nodeid !== nodeID)],
+      hasBeenInteractedWith: false,
     });
   }
 
@@ -1021,7 +1044,7 @@ class ModelBuilder extends Component {
 
     // render the graph
     let renderedForceGraph = (
-      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "600px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
+      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "500px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
           <ForceGraph2D
             enableNodeDrag
             ref={el => { this.forceGraphRef = el; }}

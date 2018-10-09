@@ -37,6 +37,7 @@ function ImportData(callback) {
           concept_2: variable["Concept 2"] || '',
           concept_3: variable["Concept 3"] || '',
           value: references,
+          references: references,
           // color: "rgba(11, 179, 214, 1)",
           color: "#0AE0DC"
         });
