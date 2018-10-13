@@ -52,6 +52,7 @@ class ModelBuilder extends Component {
       selectedLinkType: '',
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
+      showAllLabels: false,
       data: { nodes: [], links: [] },
       dropdownValue: 1,
       isCheckedCausal: true,
@@ -206,6 +207,8 @@ class ModelBuilder extends Component {
         focusedNodes: [],
         selectedNodeID: '',
       });
+    } else if (event.code === 'Slash') {
+      this.setState({ showAllLabels: !this.state.showAllLabels })
     }
   }
 
@@ -438,7 +441,7 @@ class ModelBuilder extends Component {
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
       selectedNodeLinks: this.getLinksToNode(selectedNode.id),
-      hasBeenInteractedWith: true,
+      hasBeenInteractedWith: 'click',
     });
   }
 
@@ -1044,6 +1047,13 @@ class ModelBuilder extends Component {
       this.setState({ redirectToUpdateToken: false });
     }
 
+    let cooldownTime = 15000;
+    if (this.state.hasBeenInteractedWith === 'click') {
+      cooldownTime = 0;
+    } else if (this.state.hasBeenInteractedWith) {
+      cooldownTime = 100;
+    }
+
     // render the graph
     let renderedForceGraph = (
       <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "500px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
@@ -1054,7 +1064,7 @@ class ModelBuilder extends Component {
             linkCurvature={link => { return link.curvature; }}
             nodeResolution={16}
             linkResolution={16}
-            cooldownTime={this.state.hasBeenInteractedWith ? 100 : 15000}
+            cooldownTime={cooldownTime}
             width={1100}
             linkWidth={link => {
               if (link.thickness === 1) {
@@ -1156,7 +1166,7 @@ class ModelBuilder extends Component {
                 ctx.stroke();
               }
 
-              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode) {
+              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode || this.state.showAllLabels) {
                 if (this.getLinksToNode(node.id).length > 20 && label.length > 20) {
                   label = label.slice(0,20) + '...';
                 }
