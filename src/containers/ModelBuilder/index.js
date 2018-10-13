@@ -13,6 +13,9 @@ import Toggle from 'material-ui/Toggle';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import Chip from 'material-ui/Chip';
+import Avatar from 'material-ui/Avatar';
+import FontIcon from 'material-ui/FontIcon';
 import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
@@ -488,7 +491,7 @@ class ModelBuilder extends Component {
     this.setState({
       focusedNodes,
       focusedLinks,
-      selectedNodeID: focusedLinks.length === 0 ? '' : selectedNode.id, // if deselect, remove node id
+      selectedNodeID: focusedNodes.length === 0 ? '' : selectedNode.id, // if deselect, remove node id
       selectedNodeReferences: this.getReferenceFromID(selectedNode.reference),
       selectedTitle: selectedNode.name,
       selectedType: isMeasureView ? 'Measure' : 'Variable',
@@ -595,10 +598,11 @@ class ModelBuilder extends Component {
         links: data.links.filter(link => link.linkType !== 'Causal'),
         removedLinksCausal: data.links.filter(link => link.linkType === 'Causal'),
       }
+      console.log('removed links', newData.removedLinksCausal);
     } else {
       newData = {
         nodes: [...data.nodes],
-        links: [...data.links, ...data.removedLinksCausal],
+        links: data.removedLinksCausal ? [...data.links, ...data.removedLinksCausal] : [...data.links],
         removedLinksCausal: [],
       }
     }
@@ -647,7 +651,7 @@ class ModelBuilder extends Component {
       }
     } else {
       newData = {
-        nodes: [...data.nodes, ...data.removedNodesUnlinked],
+        nodes: data.removedNodesUnlinked ? [...data.nodes, ...data.removedNodesUnlinked] : [...data.nodes],
         links: [...data.links],
         removedNodesUnlinked: [],
       }
@@ -840,7 +844,11 @@ class ModelBuilder extends Component {
     const linkOrigin = this.state.editLinkOriginValue;
     const { addedLinks, data, newLinkReferences } = this.state;
     const targetNode = this.getNodeFromID(this.state.newLinkTarget.value); // from the dropdown
+    console.log('source node selected?', this.state.selectedNodeID);
+
     const sourceNode = this.getNodeFromID(this.state.selectedNodeID);
+
+    console.log('source node', sourceNode);
 
     let commaSeparatedReferences = '';
     // process references
@@ -851,7 +859,7 @@ class ModelBuilder extends Component {
     let newData = {
       links: [...data.links],
       nodes: [...data.nodes],
-      concepts: [...data.concepts] || [],
+      concepts: data.concepts ? [...data.concepts] : [],
     }
 
     if (targetNode) {
@@ -930,6 +938,7 @@ class ModelBuilder extends Component {
     const {
       addedVariables,
       checkboxes,
+      collapsedNodes,
       data,
       focusedNodes,
       focusedLinks,
@@ -956,6 +965,7 @@ class ModelBuilder extends Component {
       modelString = this.state.selectedLinkModel;
     }
 
+    // render the clickable references + modal for each node
     let renderedNodeReferences;
     if (selectedNodeReferences) {
       renderedNodeReferences = selectedNodeReferences.map((reference, index) => {
@@ -990,6 +1000,49 @@ class ModelBuilder extends Component {
           </div>
         );
       });
+    }
+
+    // render all the chips for a collapsed node
+    let renderedHiddenNodes;
+    if (collapsedNodes && collapsedNodes.length > 0) {
+      // get collapsedNodeArray
+      const collapsedNode = collapsedNodes.filter(node => node.nodeid === selectedNodeID)[0] || [];
+      if (collapsedNode && collapsedNode.nodesRemoved && collapsedNode.nodesRemoved.length > 0) {
+        const hiddenNodes = collapsedNode.nodesRemoved || [];
+        renderedHiddenNodes = hiddenNodes.map(hiddenNode => {
+
+          // get what type of link it was from collapsedLinks
+          let linkType = 'Formula';
+          const { collapsedLinks } = this.state;
+          const collapsedLinksForNode = collapsedLinks.filter(node => node.nodeid === selectedNodeID)[0] || {};
+          if  (collapsedLinksForNode && collapsedLinksForNode.linksRemoved && collapsedLinksForNode.linksRemoved.length > 0) {
+            const links = collapsedLinksForNode.linksRemoved || [];
+            links.forEach(link => {
+              if (link.target.id === selectedNodeID && link.source.id === hiddenNode.id) {
+                linkType = link.linkType;
+              }
+            });
+          }
+
+
+          const chipStyle = {
+            backgroundColor: linkType === 'Causal' ? 'rgba(0,255,0, 0.1)' : 'rgba(255,0,0,0.1)',
+          }
+          if (hiddenNode) {
+            return (
+              <div className="ChipSpacer">
+                <Chip style={chipStyle}>
+                  {hiddenNode.name}
+                </Chip>
+              </div>
+            );
+          } else {
+            return;
+          }
+  
+        });
+      }
+
     }
 
     let renderedModels;
@@ -1203,6 +1256,7 @@ class ModelBuilder extends Component {
             nodeLabel=""
             linkLabel="id"
             backgroundColor="transparent"
+            // backgroundColor="rgba(0,0,0,0.9)"
             linkDirectionalParticles={1}
             linkDirectionalParticleWidth={link => {
               // show all when toggled
@@ -1458,17 +1512,34 @@ class ModelBuilder extends Component {
                           }
                           {
                             selectedType !== 'Link' && renderedNodeReferences && renderedNodeReferences.length > 0 && (
-                              <div className="InfoLegendLinks">
-                                <Row>
-                                  <Col xs={2}>
-                                    <div className="LinksTo">Origin</div>
-                                  </Col>
-                                  <Col xs={8}>
-                                    {renderedNodeReferences}
-                                  </Col>
-                                  <Col xs={2} />
-                                </Row>
-                              </div>
+                              <React.Fragment>
+                                <div className="InfoLegendLinks">
+                                  <Row>
+                                    <Col xs={2}>
+                                      <div className="LinksTo">Origin</div>
+                                    </Col>
+                                    <Col xs={8}>
+                                      {renderedNodeReferences}
+                                    </Col>
+                                    <Col xs={2} />
+                                  </Row>
+                                </div>
+                                {
+                                  renderedHiddenNodes && renderedHiddenNodes.length > 0 && (
+                                    <div className="InfoLegendLinks grey">
+                                      <Row>
+                                        <Col xs={2}>
+                                          <div className="LinksTo">Hidden</div>
+                                        </Col>
+                                        <Col xs={10} className="ChipContainer">
+                                          {renderedHiddenNodes}
+                                        </Col>
+                                      </Row>
+                                    </div>
+                                  )
+                                }
+
+                              </React.Fragment>
                             )
                           }
                           { 

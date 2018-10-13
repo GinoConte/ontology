@@ -102,6 +102,11 @@
   background-color: rgba(131, 198, 72, 0.3);
 }
 
+.InfoLegendLinks.grey {
+  background-color: rgba(49, 52, 53, 0.05);
+  margin-top: 15px;
+}
+
 .InfoLegendItem.type {
   text-decoration: underline;
   opacity: 0.4;
@@ -253,6 +258,17 @@
   align-items: center;
   justify-content: flex-end;
   padding-right: 10px;
+}
+
+.ChipContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.ChipSpacer {
+  display: inline-block;
+  margin: 3px 5px;
 }
 
 .amcharts-chart-div a {display:none !important;}
