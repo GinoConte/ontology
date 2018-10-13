@@ -50,6 +50,7 @@ class ModelBuilder extends Component {
       highlightedNodes: [],
       isEditLinkOpen: false,
       isMeasureView: false,
+      isFullscreen: false,
       newLinkInput: '',
       newLinkTarget: '',
       newVariableInput: '',
@@ -65,6 +66,7 @@ class ModelBuilder extends Component {
       selectedLinkOrigin: '',
       selectedLinkTargetTitle: '',
       showAllLabels: false,
+      showNoLabels: false,
       data: { nodes: [], links: [] },
       dropdownValue: 1,
       isCheckedCausal: true,
@@ -214,7 +216,9 @@ class ModelBuilder extends Component {
     };
   }
 
+  // to-do rename to "keypress handler" because it does more than deselect lol
   deselectNodes(event) {
+    console.log('evment:', event.code);
     if (event.code === 'Escape') {
       this.setState({
         focusedLinks: [],
@@ -222,7 +226,33 @@ class ModelBuilder extends Component {
         selectedNodeID: '',
       });
     } else if (event.code === 'Slash') {
+      // toggle showing all labels when slash is pressed
       this.setState({ showAllLabels: !this.state.showAllLabels })
+    } else if (event.code === 'Quote') {
+      // toggle showing NO labels when quote is pressed '
+      this.setState({ showNoLabels: !this.state.showNoLabels });
+    } else if (event.code === 'KeyF') {
+      const { isFullscreen } = this.state;
+      console.log('pressed f');
+      const ontology = document.getElementById('ontology');
+      const details = document.getElementById('details');
+      const toolbar = document.getElementById('toolbar');
+      const everything = document.getElementById('everythanggg');
+      
+      if (isFullscreen) {
+        details.setAttribute('style', 'display: block');
+        toolbar.setAttribute('style', 'display: block');
+        ontology.setAttribute('style', 'max-height: 800px;overflow-y: hidden;position: relative;left: calc((100% - 1900px) / 2);');
+      } else {
+        details.setAttribute('style', 'display: none');
+        toolbar.setAttribute('style', 'display: none');
+        ontology.setAttribute('style', 'max-height: 2000px;overflow-y: hidden;position: relative;left: calc((100% - 1900px) / 2);');
+        // everything.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      }
+      this.setState({ isFullscreen: !this.state.isFullscreen });
+      // ontology.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+
+      // ontology.requestFullscreen();
     }
   }
 
@@ -1131,7 +1161,7 @@ class ModelBuilder extends Component {
 
     // render the graph
     let renderedForceGraph = (
-      <div className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "500px", position: "relative", left: "calc((100% - 1100px) / 2)", }}>
+      <div id='ontology' className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "800px", position: "relative", left: "calc((100% - 1900px) / 2)", }}>
           <ForceGraph2D
             enableNodeDrag
             ref={el => { this.forceGraphRef = el; }}
@@ -1140,7 +1170,7 @@ class ModelBuilder extends Component {
             nodeResolution={16}
             linkResolution={16}
             cooldownTime={cooldownTime}
-            width={1100}
+            width={1900}
             linkWidth={link => {
               if (link.thickness === 1) {
                 return 1;
@@ -1241,24 +1271,25 @@ class ModelBuilder extends Component {
                 ctx.stroke();
               }
 
-              if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode || this.state.showAllLabels) {
-                if (this.getLinksToNode(node.id).length > 20 && label.length > 20) {
-                  label = label.slice(0,20) + '...';
-                }
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = "black";
+              if (!this.state.showNoLabels || node.id === selectedNodeID) {
+                if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode || this.state.showAllLabels) {
+                  if (this.getLinksToNode(node.id).length > 20 && label.length > 20) {
+                    label = label.slice(0,20) + '...';
+                  }
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillStyle = "black";
 
-                let verticleOffset = node.value ? node.value * -4 : -5;
-                if (node.value === 1) {
-                  verticleOffset = -5;
+                  let verticleOffset = node.value ? node.value * -4 : -5;
+                  if (node.value === 1) {
+                    verticleOffset = -5;
+                  }
+                  ctx.maxWidth = 20;
+                  ctx.fillText(label, node.x, node.y + verticleOffset);
                 }
-                ctx.maxWidth = 20;
-                ctx.fillText(label, node.x, node.y + verticleOffset);
               }
             }}
           />
-        }
       </div>
     );
 
@@ -1273,7 +1304,7 @@ class ModelBuilder extends Component {
 
     return (
       <React.Fragment>
-        <Container className="Container" style={{minWidth: "960px"}}>
+        <Container id="toolbar" className="Container" style={{minWidth: "960px"}}>
           {/* <div className="GraphBackground" /> */}
           {renderedTokenRedirect}
           <Row>
@@ -1330,7 +1361,7 @@ class ModelBuilder extends Component {
           </Row>
         </Container>
         {renderedForceGraph}
-        <Container>
+        <Container id="details">
           <Row>
             <Col>
               <div>
