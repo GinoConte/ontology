@@ -43,6 +43,7 @@ class ModelBuilder extends Component {
       isEditLinkOpen: false,
       isMeasureView: false,
       newLinkInput: '',
+      newLinkTarget: '',
       newVariableInput: '',
       newNodes: [],
       savedToKB: false,
@@ -104,6 +105,8 @@ class ModelBuilder extends Component {
     //modal
     this.handleLinkTypeChange = this.handleLinkTypeChange.bind(this);
     this.handleLinkOriginChange = this.handleLinkOriginChange.bind(this);
+    this.handleNewLinkTargetSelect = this.handleNewLinkTargetSelect.bind(this);
+    this.handleNewLinkReferenceSelect = this.handleNewLinkReferenceSelect.bind(this);
     this.handleNewLinkInputChange = this.handleNewLinkInputChange.bind(this);
     this.toggleEditLink = this.toggleEditLink.bind(this);
     this.submitEditLink = this.submitEditLink.bind(this);
@@ -404,6 +407,17 @@ class ModelBuilder extends Component {
       });
 
     });
+  }
+
+  // target takes the form { value: node.id, label: node.name }
+  handleNewLinkTargetSelect(target) {
+    console.log('target selected', target);
+    this.setState({ newLinkTarget: target })
+  }
+
+  // target takes the form { value: node.id, label: node.name }
+  handleNewLinkReferenceSelect(references) {
+    this.setState({ newLinkReferences: references })
   }
 
   handleNodeClick(clickedNode) {
@@ -724,7 +738,7 @@ class ModelBuilder extends Component {
         savedToKB: true,
         savedToKBMessage: response,
       });
-      console.log('dont refresh!');
+      console.log('Refresh due to file changing -- possibly nodemon?');
     });
   }
 
@@ -776,40 +790,80 @@ class ModelBuilder extends Component {
   submitEditLink() {
     const linkType = this.state.editLinkTypeValue;
     const linkOrigin = this.state.editLinkOriginValue;
-    const newData = this.state.data;
-    const targetNode = this.getNodeFromName(this.state.newLinkInput);
+    const { data, newLinkReferences } = this.state;
+    const targetNode = this.getNodeFromID(this.state.newLinkTarget.value); // from the dropdown
     const sourceNode = this.getNodeFromID(this.state.selectedNodeID);
+
+    let commaSeparatedReferences = '';
+    // process references
+    newLinkReferences.forEach(reference => {
+      commaSeparatedReferences = commaSeparatedReferences + ', ' + reference.value;
+    });
+
+    let newData = {
+      links: [...data.links],
+      nodes: [...data.nodes],
+      concepts: [...data.concepts] || [],
+    }
 
     if (targetNode) {
 
       //check if already exists, update if it does
+      // let linkExists = false;
+      // newData.links.forEach((link, index) => {
+      //   if ((link.target === sourceNode.id) && !linkExists) {
+      //     linkExists = true;
+      //     newData.links[index].linkType = linkType;
+      //     newData.links[index].linkOrigin = linkOrigin;
+      //     // break; -- need to implement exception for larger quantities of variables
+      //   }
+      // })
       let linkExists = false;
-      newData.links.forEach((link, index) => {
-        if ((link.target === sourceNode.id) && !linkExists) {
-          linkExists = true;
-          newData.links[index].linkType = linkType;
-          newData.links[index].linkOrigin = linkOrigin;
-          // break; -- need to implement exception for larger quantities of variables
-        }
-      })
 
       //doesn't exist, so we push new link
       if (!linkExists) {
         newData.links.push({
+          id: 'VL00' + this.state.data.links.length,
           linkOrigin: linkOrigin,
           linkType: linkType,
-          source: this.state.selectedNodeID,
-          target: targetNode.id,
+          source: sourceNode,
+          target: targetNode,
+          reference: commaSeparatedReferences || '',
         });
       }
 
-      this.setState({ data: newData });
       this.toggleEditLink();
+      this.setState({ data: newData }, success => {
+        this.deselectNodes({ code: 'Escape' });
+      });
     }
   }
 
   toggleEditLink() {
-    this.setState({ isEditLinkOpen: !this.state.isEditLinkOpen });
+    const { nodes } = this.state.data;
+    const { references } = this.state;
+    //get options for the dropdown
+    const options = [];
+    nodes.forEach(node => {
+      if (node.name) {
+        options.push({value: node.id, label: node.name})
+      }
+    });
+    const referenceNames = [];
+    references.forEach(reference => {
+      if (reference.id) {
+        referenceNames.push({value: reference.id, label: reference.item.slice(0,70)});
+      }
+    })
+    
+    console.log('refs', references);
+
+    this.setState({
+      isEditLinkOpen: !this.state.isEditLinkOpen,
+      nodeNames: options,
+      referenceNames,
+    });
+
   }
 
   toggleReferenceModal() {
@@ -894,7 +948,7 @@ class ModelBuilder extends Component {
           <div className="NodeReference" onClick={this.toggleModelModal}>
             <span style={{textDecoration: 'underline'}}>{model.id}:</span><span>&nbsp;{model.name}</span>
             <Dialog
-              title="Reference Details"
+              title="Model Details"
               actions={editLinkActions}
               modal={false}
               open={this.state.isModelModalOpen}
@@ -1387,31 +1441,50 @@ class ModelBuilder extends Component {
                                     primary={true} 
                                   />
                                   <Dialog
-                                    title="Create a new link"
+                                    title={`Create a new link`}
                                     actions={editLinkActions}
                                     modal={false}
                                     open={this.state.isEditLinkOpen}
                                     onRequestClose={this.toggleEditLink}
                                   >
-                                    <TextField
-                                      // hintText="Variable name"
-                                      className="CreateNodeInput"
-                                      floatingLabelText="Target variable name"
-                                      value={this.state.newLinkInput}
-                                      onChange={this.handleNewLinkInputChange}
-                                    />
-                                    <br />
-                                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
-                                      <MenuItem value="Causal" primaryText="Causal" />
-                                      <MenuItem value="Hypothesized" primaryText="Hypothesized" />
-                                    </DropDownMenu>
-                                    <br />
-                                    <DropDownMenu className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
-                                      <MenuItem value="via Model" primaryText="via Model" />
-                                      <MenuItem value="via Opinion" primaryText="via Opinion" />
-                                      <MenuItem value="via Reference" primaryText="via Reference" />
-                                    </DropDownMenu>
+                                    <div className="EditLinkModal">
+                                      <div className="EditLinkForm full">
+                                        <div className="EditLinkFormLabel"><span> Target&nbsp; </span></div>
+                                        <Select
+                                          value={this.state.newLinkTarget}
+                                          options={this.state.nodeNames}
+                                          onChange={this.handleNewLinkTargetSelect}
+                                          placeholder="Search by name"
+                                        />
+                                      </div>
+                                      <div className="EditLinkForm">
+                                        <div className="EditLinkFormLabel"><span> Link Type &nbsp; </span></div>
+                                        <DropDownMenu anchorOrigin={{ vertical: 'center', horizontal: 'middle'}}	className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
+                                          <MenuItem value="Causal" primaryText="Causal" />
+                                          <MenuItem value="Formulaic" primaryText="Formulaic" />
+                                        </DropDownMenu>
+                                      </div>
+                                      <div className="EditLinkForm">
+                                        <div className="EditLinkFormLabel"><span> Link Origin &nbsp; </span></div>
+                                        <DropDownMenu anchorOrigin={{ vertical: 'center', horizontal: 'middle'}} className="ToolbarTitle dropdown" value={this.state.editLinkOriginValue} onChange={this.handleLinkOriginChange}>
+                                          <MenuItem value="via Model" primaryText="via Model" />
+                                          <MenuItem value="via Opinion" primaryText="via Opinion" />
+                                          <MenuItem value="via Reference" primaryText="via Reference" />
+                                        </DropDownMenu>
+                                      </div>
+                                      <div className="EditLinkForm full">
+                                        <div className="EditLinkFormLabel"><span> References &nbsp; </span></div>
+                                          <Select
+                                            isMulti
+                                            value={this.state.newLinkReferences}
+                                            options={this.state.referenceNames}
+                                            onChange={this.handleNewLinkReferenceSelect}
+                                            placeholder="Search by title"
+                                          />
+                                      </div>
+                                    </div>
                                   </Dialog>
+                
                                 </div>
                               </div>
                             )

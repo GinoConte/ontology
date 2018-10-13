@@ -232,4 +232,27 @@
   /* text-align: center; */
 }
 
+.EditLinkModal {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.EditLinkForm {
+  display: grid;
+  grid-template: 1fr / 2fr 5fr 5fr;
+  margin-top: 20px;
+}
+
+.EditLinkForm.full {
+  grid-template: 1fr / 2fr 10fr;
+}
+
+.EditLinkFormLabel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+}
+
 .amcharts-chart-div a {display:none !important;}
