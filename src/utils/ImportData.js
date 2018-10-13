@@ -192,11 +192,9 @@ function ImportMeasures(callback) {
   });
 }
 
-function ExportNodes(nodes, callback) {
-  // const testNode = {id: 'hello', name: 'hi'};
-  // const testNodes = [ testNode ];
+function ExportNodes(nodes = [], callback) {
   const packet = { nodes };
-  // save new Variable via node api 
+  // save new Variables via node api 
   axios
     .post('http://localhost:3001/new-node', packet)
     .then(function (response) {
@@ -209,4 +207,18 @@ function ExportNodes(nodes, callback) {
     });
 }
 
-export { ExportNodes, ImportData, ImportReferences, ImportModels, ImportPeople, ImportMeasures };
+function ExportLinks(links = [], callback) {
+    const packet = { links };
+    axios
+    .post('http://localhost:3001/new-links', packet)
+    .then(function (response) {
+      // handle success
+      console.log('posted new links', response.data);
+      return callback(response.data);
+    })
+    .catch(function (error) {
+      console.log('error', error);
+    });
+}
+
+export { ExportNodes, ExportLinks, ImportData, ImportReferences, ImportModels, ImportPeople, ImportMeasures };

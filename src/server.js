@@ -39,3 +39,23 @@ app.post("/new-node", function (req, res) {
   }
 
 });
+
+app.post("/new-links", function (req, res) {
+  const links = req.body.links || [];
+  let csvString = '';
+  links.forEach(link => {
+    csvString = csvString + `${link.id},${link.source.id},${link.target.id},${link.linkType},,${'"' + link.reference + '"'},,,,,,,,,\r\n`;
+  });
+
+  // res.status(200).send('Success');
+
+  if (csvString) {
+    fs.appendFile('./utils/links.csv', csvString, function (err) {
+      if (err) throw err;
+      res.status(200).send('Exported data to Knowledge Base!');
+    });
+  } else {
+    res.status(200).send('Empty Data - No changes!');
+  }
+
+});

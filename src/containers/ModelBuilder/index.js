@@ -19,7 +19,15 @@ import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
-import { ExportNodes, ImportData, ImportReferences, ImportMeasures, ImportPeople, ImportModels } from '../../utils/ImportData';
+import { 
+  ExportNodes,
+  ExportLinks,
+  ImportData,
+  ImportReferences,
+  ImportMeasures,
+  ImportPeople,
+  ImportModels 
+} from '../../utils/ImportData';
 import { isConceptNameSelected } from '../../utils/ConceptUtils';
 
 class ModelBuilder extends Component {
@@ -46,7 +54,10 @@ class ModelBuilder extends Component {
       newLinkTarget: '',
       newVariableInput: '',
       newNodes: [],
+      newLinks: [],
+      newLinkReferences: [],
       savedToKB: false,
+      savedToKBMessage: '',
       selectedNodeID: '',
       selectedType: '',
       selectedTitle: '',
@@ -490,6 +501,7 @@ class ModelBuilder extends Component {
   }
 
   handleLinkClick(link) {
+    console.log('link click', link);
     const { focusedLinks } = this.state;
     this.setState({
       selectedType: 'Link',
@@ -740,6 +752,12 @@ class ModelBuilder extends Component {
       });
       console.log('Refresh due to file changing -- possibly nodemon?');
     });
+    ExportLinks(this.state.newLinks, response => {
+      this.setState({
+        savedToKB: true,
+        savedToKBMessage: response,
+      });
+    });
   }
 
   handleSnackbarClose() {
@@ -790,7 +808,7 @@ class ModelBuilder extends Component {
   submitEditLink() {
     const linkType = this.state.editLinkTypeValue;
     const linkOrigin = this.state.editLinkOriginValue;
-    const { data, newLinkReferences } = this.state;
+    const { addedLinks, data, newLinkReferences } = this.state;
     const targetNode = this.getNodeFromID(this.state.newLinkTarget.value); // from the dropdown
     const sourceNode = this.getNodeFromID(this.state.selectedNodeID);
 
@@ -821,19 +839,24 @@ class ModelBuilder extends Component {
       let linkExists = false;
 
       //doesn't exist, so we push new link
+      const newLink = {
+        id: 'VL00' + this.state.data.links.length,
+        linkOrigin: linkOrigin,
+        linkType: linkType,
+        source: sourceNode,
+        target: targetNode,
+        reference: commaSeparatedReferences || '',
+      };
+
       if (!linkExists) {
-        newData.links.push({
-          id: 'VL00' + this.state.data.links.length,
-          linkOrigin: linkOrigin,
-          linkType: linkType,
-          source: sourceNode,
-          target: targetNode,
-          reference: commaSeparatedReferences || '',
-        });
+        newData.links.push(newLink);
       }
 
       this.toggleEditLink();
-      this.setState({ data: newData }, success => {
+      this.setState({
+        data: newData,
+        newLinks: [...this.state.newLinks, newLink]
+      }, success => {
         this.deselectNodes({ code: 'Escape' });
       });
     }
@@ -856,8 +879,6 @@ class ModelBuilder extends Component {
       }
     })
     
-    console.log('refs', references);
-
     this.setState({
       isEditLinkOpen: !this.state.isEditLinkOpen,
       nodeNames: options,
@@ -1461,7 +1482,7 @@ class ModelBuilder extends Component {
                                         <div className="EditLinkFormLabel"><span> Link Type &nbsp; </span></div>
                                         <DropDownMenu anchorOrigin={{ vertical: 'center', horizontal: 'middle'}}	className="ToolbarTitle dropdown" value={this.state.editLinkTypeValue} onChange={this.handleLinkTypeChange}>
                                           <MenuItem value="Causal" primaryText="Causal" />
-                                          <MenuItem value="Formulaic" primaryText="Formulaic" />
+                                          <MenuItem value="Formula" primaryText="Formula" />
                                         </DropDownMenu>
                                       </div>
                                       <div className="EditLinkForm">
