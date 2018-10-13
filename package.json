@@ -5,12 +5,18 @@
   "dependencies": {
     "@amcharts/amcharts3-react": "^3.0.4",
     "@material-ui/icons": "^1.0.0-beta.42",
+    "axios": "^0.18.0",
     "bootstrap": "^4.0.0",
     "browserify": "^16.1.1",
     "classnames": "^2.2.5",
+    "cors": "^2.8.4",
     "d3-fetch": "^1.1.0",
+    "express": "^4.16.4",
+    "file-system": "^2.2.2",
+    "fs": "^0.0.1-security",
     "gfycat-style-urls": "^1.0.3",
     "html-loader": "^0.5.5",
+    "json2csv": "^4.2.1",
     "material-ui": "^0.20.0",
     "node-sass-chokidar": "^1.2.2",
     "react": "^16.2.0",
@@ -29,6 +35,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "dev": "nodemon /src/App.js localhost:3000"
+    "dev": "nodemon --ignore '*.csv' /src/App.js localhost:3000"
+  },
+  "nodemonConfig": {
+    "ignore": ["src/utils/*.csv", "*.csv"]
   }
 }

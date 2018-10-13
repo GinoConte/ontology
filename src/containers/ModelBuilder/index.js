@@ -13,12 +13,13 @@ import Toggle from 'material-ui/Toggle';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import RaisedButton from 'material-ui/RaisedButton';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
 
-import { ImportData, ImportReferences, ImportMeasures, ImportPeople, ImportModels } from '../../utils/ImportData';
+import { ExportNodes, ImportData, ImportReferences, ImportMeasures, ImportPeople, ImportModels } from '../../utils/ImportData';
 import { isConceptNameSelected } from '../../utils/ConceptUtils';
 
 class ModelBuilder extends Component {
@@ -43,6 +44,8 @@ class ModelBuilder extends Component {
       isMeasureView: false,
       newLinkInput: '',
       newVariableInput: '',
+      newNodes: [],
+      savedToKB: false,
       selectedNodeID: '',
       selectedType: '',
       selectedTitle: '',
@@ -94,6 +97,7 @@ class ModelBuilder extends Component {
     this.handleMeasureView = this.handleMeasureView.bind(this);
     this.isNodeInConcept = this.isNodeInConcept.bind(this);
     this.onSaveToKB = this.onSaveToKB.bind(this);
+    this.handleSnackbarClose = this.handleSnackbarClose.bind(this);
     this.handleInteraction = this.handleInteraction.bind(this)
     
     //modal
@@ -170,7 +174,7 @@ class ModelBuilder extends Component {
     e.preventDefault();
     if (this.state.newVariableInput.length > 0) {
       const { data } = this.state;
-      const newNode = { id: 'new node' + data.nodes.length, name: this.state.newVariableInput, value: 1 };
+      const newNode = { id: 'VID00' + data.nodes.length, name: this.state.newVariableInput, value: 2, color: "#0AE0DC" };
       const newData = {
         nodes: [...data.nodes, newNode],
         links: [...data.links],
@@ -180,10 +184,16 @@ class ModelBuilder extends Component {
         data: newData,
         newVariableInput: '',
         focusedLinks: [],
-        focusedNodes: [newNode],
+        focusedNodes: [],
         hasBeenInteractedWith: false,
+        newNodes: [...this.state.newNodes, newNode],
       }, success => {
-        this.handleNodeClick(newNode);
+        // this.handleNodeClick(newNode);
+
+        // move camera on new node
+        // if (this.forceGraphRef) {
+        //   this.forceGraphRef.centerAt()
+        // }
       });
       
     };
@@ -706,25 +716,17 @@ class ModelBuilder extends Component {
   }
 
   onSaveToKB() {
-
-    //1 check if token exists
-
-      // if so save to current token
-        let token = this.state.token;
-        //2 check if changes are made to current token
-
-      // if not generate new token
-        token = generateCombination(3, "", true);
-              
-      //save to database
-
-      //redirect to /model-builder/:token
+    ExportNodes(this.state.newNodes, response => {
       this.setState({
-        token,
-        redirectToUpdateToken: true,
+        savedToKB: true,
+        savedToKBMessage: response,
       });
+      console.log('dont refresh!');
+    });
+  }
 
-    console.log('generated token', token);
+  handleSnackbarClose() {
+    this.setState({ savedToKB: false });
   }
 
   handleAddVariable() {
@@ -1155,7 +1157,7 @@ class ModelBuilder extends Component {
               }
 
               if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode) {
-                if (this.getLinksToNode(node.id).length > 5 && label.length > 20) {
+                if (this.getLinksToNode(node.id).length > 20 && label.length > 20) {
                   label = label.slice(0,20) + '...';
                 }
                 ctx.textAlign = 'center';
@@ -1250,6 +1252,12 @@ class ModelBuilder extends Component {
                 <div className="InfoContainer">
                   <Row>
                     <Col xs={8}>
+                      <Snackbar
+                        open={this.state.savedToKB}
+                        message={this.state.savedToKBMessage}
+                        autoHideDuration={4000}
+                        onRequestClose={this.handleSnackbarClose}
+                      />
                       <div className="CreateNode">
                         <form onSubmit={this.addNewNode}>
                           <TextField

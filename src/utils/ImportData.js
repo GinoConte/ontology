@@ -1,10 +1,13 @@
 import { csv } from 'd3-fetch';
+import axios from 'axios';
+
 import variableFile from './example2.csv';
 import linkFile from './links.csv';
 import referenceFile from './references.csv';
 import modelFile from  './models.csv';
 import peopleFile from './people.csv';
 import measureFile from './measures.csv';
+
 
 function ImportData(callback) {
   const graph = {
@@ -189,4 +192,21 @@ function ImportMeasures(callback) {
   });
 }
 
-export { ImportData, ImportReferences, ImportModels, ImportPeople, ImportMeasures };
+function ExportNodes(nodes, callback) {
+  // const testNode = {id: 'hello', name: 'hi'};
+  // const testNodes = [ testNode ];
+  const packet = { nodes };
+  // save new Variable via node api 
+  axios
+    .post('http://localhost:3001/new-node', packet)
+    .then(function (response) {
+      // handle success
+      console.log('posted new node', response.data);
+      return callback(response.data);
+    })
+    .catch(function (error) {
+      console.log('error', error);
+    });
+}
+
+export { ExportNodes, ImportData, ImportReferences, ImportModels, ImportPeople, ImportMeasures };
