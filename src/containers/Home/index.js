@@ -14,7 +14,8 @@ class Home extends Component {
       <Container className="Home">
         <Row>
           <Col xs={12}>
-            <h1>Knowledge Base</h1>
+            <h1>FLO</h1>
+            <h4>Force-directed (Statistical) Learning Ontology</h4>
           </Col>
           <Col xs={12}>
             <div className="Home-buttons-container">

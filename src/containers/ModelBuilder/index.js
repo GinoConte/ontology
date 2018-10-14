@@ -21,6 +21,7 @@ import Dialog from 'material-ui/Dialog';
 import { generateCombination } from 'gfycat-style-urls';
 import { Redirect } from 'react-router-dom';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/lib/Creatable';
 
 import { 
   ExportNodes,
@@ -54,6 +55,7 @@ class ModelBuilder extends Component {
       isEditLinkOpen: false,
       isMeasureView: false,
       isFullscreen: false,
+      isLoadingNewReference: false,
       newLinkInput: '',
       newLinkTarget: '',
       newVariableInput: '',
@@ -126,6 +128,7 @@ class ModelBuilder extends Component {
     this.handleNewLinkInputChange = this.handleNewLinkInputChange.bind(this);
     this.toggleEditLink = this.toggleEditLink.bind(this);
     this.submitEditLink = this.submitEditLink.bind(this);
+    this.handleCreateNewReference = this.handleCreateNewReference.bind(this);
     this.toggleReferenceModal = this.toggleReferenceModal.bind(this);
     this.toggleModelModal = this.toggleModelModal.bind(this);
 
@@ -221,7 +224,6 @@ class ModelBuilder extends Component {
 
   // to-do rename to "keypress handler" because it does more than deselect lol
   deselectNodes(event) {
-    console.log('evment:', event.code);
     if (event.code === 'Escape') {
       this.setState({
         focusedLinks: [],
@@ -234,9 +236,8 @@ class ModelBuilder extends Component {
     } else if (event.code === 'Quote') {
       // toggle showing NO labels when quote is pressed '
       this.setState({ showNoLabels: !this.state.showNoLabels });
-    } else if (event.code === 'KeyF') {
+    } else if (event.code === 'BracketRight') {
       const { isFullscreen } = this.state;
-      console.log('pressed f');
       const ontology = document.getElementById('ontology');
       const details = document.getElementById('details');
       const toolbar = document.getElementById('toolbar');
@@ -893,9 +894,45 @@ class ModelBuilder extends Component {
       this.toggleEditLink();
       this.setState({
         data: newData,
-        newLinks: [...this.state.newLinks, newLink]
+        newLinks: [...this.state.newLinks, newLink],
+        editLinkTypeValue: '',
+        editLinkOriginValue: '',
+        newLinkReferences: [],
       }, success => {
         this.deselectNodes({ code: 'Escape' });
+      });
+    }
+  }
+
+  handleCreateNewReference(referenceTitle = '') {
+    if (referenceTitle) {
+      const { references, referenceNames, newLinkReferences } = this.state;
+      const newReferenceID = 'REF00' + (references.length + 1);
+      const referenceObject = {
+        id: newReferenceID,
+        item: referenceTitle,
+      };
+      this.setState({ isLoadingNewReference: true }, () => {
+        setTimeout(() => {
+          // referenceNames.push(referenceTitle);
+          // newLinkReferences.push({ value: newReferenceID, label: referenceTitle });
+          this.setState({
+            isLoadingNewReference: false,
+            references: [...this.state.references, referenceObject],
+            // newLinkReferences: { value: newReferenceID, label: referenceTitle },
+            // referenceNames,
+          }, () => {
+            const newSelections = (newLinkReferences && newLinkReferences.length > 0) ? [...newLinkReferences, { value: newReferenceID, label: referenceTitle }] : [{ value: newReferenceID, label: referenceTitle }];
+            this.handleNewLinkReferenceSelect(newSelections);
+            // // re-process all the references to populate the list
+            // const referenceNames = [];
+            // references.forEach(reference => {
+            //   if (reference.id) {
+            //     referenceNames.push({value: reference.id, label: reference.item.slice(0,70)});
+            //   }
+            // })
+          });
+        }, 1000); // fake loading until we can export to database
       });
     }
   }
@@ -1564,7 +1601,7 @@ class ModelBuilder extends Component {
                                     primary={true} 
                                   />
                                   <Dialog
-                                    title={`Create a new link`}
+                                    title={`Create a new link connecting to ${selectedTitle.slice(0,30)}`}
                                     actions={editLinkActions}
                                     modal={false}
                                     open={this.state.isEditLinkOpen}
@@ -1597,11 +1634,14 @@ class ModelBuilder extends Component {
                                       </div>
                                       <div className="EditLinkForm full">
                                         <div className="EditLinkFormLabel"><span> References &nbsp; </span></div>
-                                          <Select
+                                          <CreatableSelect
                                             isMulti
+                                            isLoading={this.state.isLoadingNewReference}
+                                            isDisabled={this.state.isLoadingNewReference}
                                             value={this.state.newLinkReferences}
                                             options={this.state.referenceNames}
                                             onChange={this.handleNewLinkReferenceSelect}
+                                            onCreateOption={this.handleCreateNewReference}
                                             placeholder="Search by title"
                                           />
                                       </div>
