@@ -184,9 +184,13 @@ class ModelBuilder extends Component {
     });
     
     // position the canvas on load
-    if (this.forceGraphRef) {
+    if (this.forceGraphRef && !this.props.is3D) {
       this.forceGraphRef.zoom(4,100);
       this.forceGraphRef.centerAt(0, -20);
+    }
+    
+    if (this.props.is3D) {
+      this.deselectNodes({code: 'BracketRight'});
     }
 
     // add esc event listener
@@ -197,7 +201,7 @@ class ModelBuilder extends Component {
     e.preventDefault();
     if (this.state.newVariableInput.length > 0) {
       const { data } = this.state;
-      const newNode = { id: 'VID00' + data.nodes.length, name: this.state.newVariableInput, value: 2, color: "#0AE0DC" };
+      const newNode = { id: 'VID00' + (data.nodes.length +1), name: this.state.newVariableInput, value: 2, color: "#0AE0DC" };
       const newData = {
         nodes: [...data.nodes, newNode],
         links: [...data.links],
@@ -246,11 +250,11 @@ class ModelBuilder extends Component {
       if (isFullscreen) {
         details.setAttribute('style', 'display: block');
         toolbar.setAttribute('style', 'display: block');
-        ontology.setAttribute('style', 'max-height: 800px;overflow-y: hidden;position: relative;left: calc((100% - 1900px) / 2);');
+        ontology.setAttribute('style', 'max-height: 650px;overflow-y: hidden;position: relative;left: calc((100% - 1600px) / 2);');
       } else {
         details.setAttribute('style', 'display: none');
         toolbar.setAttribute('style', 'display: none');
-        ontology.setAttribute('style', 'max-height: 2000px;overflow-y: hidden;position: relative;left: calc((100% - 1900px) / 2);');
+        ontology.setAttribute('style', `max-height: 2000px;overflow-y: hidden;position: relative;left: ${ this.props.is3D ? '0' : 'calc((100% - 1600px)'} / 2);`);
         // everything.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
       }
       this.setState({ isFullscreen: !this.state.isFullscreen });
@@ -291,7 +295,7 @@ class ModelBuilder extends Component {
     const newData = {
       nodes: [...filteredNodes],
       links: [...filteredLinks],
-      concepts: [...data.concepts] || [],
+      concepts: data.concepts ? [...data.concepts] : [],
     };
 
     // get the node thats been collapsed to
@@ -419,7 +423,7 @@ class ModelBuilder extends Component {
     const selectedConcepts = value;
     ImportData(data => {
       if (isConceptNameSelected('All', selectedConcepts) || value.length === 0) {
-        return this.setState({ data });
+        return this.setState({ data, hasBeenInteractedWith: false });
       }
       let newData = {
         nodes: data.nodes.slice(),
@@ -727,11 +731,59 @@ class ModelBuilder extends Component {
   }
 
   handleCheckedOpinion() {
-    this.setState({ isCheckedOpinion: !this.state.isCheckedOpinion });
+    const { data } = this.state;
+    let newData = {}
+
+    if (this.state.isCheckedOpinion) {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.links.filter(link => link.linkOrigin !== 'via opinion'),
+        removedLinksOpinion: data.links.filter(link => link.linkOrigin === 'via opinion'),
+        removedLinksReference: data.removedLinksReference ? [...data.removedLinksReference] : [],
+      }
+      console.log('removed links', newData.removedLinksCausal);
+    } else {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.removedLinksOpinion ? [...data.links, ...data.removedLinksOpinion] : [...data.links],
+        removedLinksOpinion: [],
+        removedLinksReference: data.removedLinksReference ? [...data.removedLinksReference] : [],
+      }
+    }
+
+    this.setState({
+      isCheckedOpinion: !this.state.isCheckedOpinion,
+      data: newData,
+      hasBeenInteractedWith: false,
+    });
   }
 
   handleCheckedReference() {
-    this.setState({ isCheckedReference: !this.state.isCheckedReference });
+    const { data } = this.state;
+    let newData = {};
+    console.log('links', data.links);
+    if (this.state.isCheckedReference) {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.links.filter(link => link.linkOrigin !== 'via reference'),
+        removedLinksReference: data.links.filter(link => link.linkOrigin === 'via reference'),
+        removedLinksOpinion: data.removedLinksOpinion ? [...data.removedLinksOpinion] : [],
+      }
+    } else {
+      newData = {
+        nodes: [...data.nodes],
+        links: data.removedLinksReference ? [...data.links, ...data.removedLinksReference] : [...data.links],
+        removedLinksReference: [],
+        removedLinksOpinion: data.removedLinksOpinion ? [...data.removedLinksOpinion] : [],
+
+      }
+    }
+
+    this.setState({
+      isCheckedReference: !this.state.isCheckedReference,
+      data: newData,
+      hasBeenInteractedWith: false,
+    });
   }
 
   handleNewVariableInputChange(event) {
@@ -1251,7 +1303,7 @@ class ModelBuilder extends Component {
 
     // render the graph
     let renderedForceGraph = (
-      <div id='ontology' className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "800px", position: "relative", left: "calc((100% - 1900px) / 2)", }}>
+      <div id='ontology' className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "650px", position: "relative", left: "calc((100% - 1600px) / 2)", }}>
           <ForceGraph2D
             enableNodeDrag
             ref={el => { this.forceGraphRef = el; }}
@@ -1260,7 +1312,7 @@ class ModelBuilder extends Component {
             nodeResolution={16}
             linkResolution={16}
             cooldownTime={cooldownTime}
-            width={1900}
+            width={1600}
             linkWidth={link => {
               if (link.thickness === 1) {
                 return 1;
@@ -1284,7 +1336,8 @@ class ModelBuilder extends Component {
                 if (focusedLinks.indexOf(link) > -1) {
                   return "rgba(228, 82, 75, 0.7)";
                 } else if (highlightedLinks.indexOf(link) > -1) {
-                  return "rgba(255, 198, 40, 0.7)";
+                  return "rgba(255, 198, 40, 1)";
+                  // return "#e99bff";
                 } else {
                   return link.color;
                 }
@@ -1323,7 +1376,7 @@ class ModelBuilder extends Component {
             onLinkClick={this.handleLinkClick}
             nodeCanvasObject={(node, ctx, globalScale) => {
               let label = node.name.toUpperCase();
-              const fontSize = 12/globalScale;
+              const fontSize = 11/globalScale;
               let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
               let isFocusedNode = focusedNodes.indexOf(node) > -1;
 
@@ -1354,18 +1407,22 @@ class ModelBuilder extends Component {
 
               if (isFocusedNode) {
                 ctx.strokeStyle = "rgb(0, 0, 0)";
-                ctx.lineWidth = 0.5;
+                ctx.lineWidth = 0.3;
                 ctx.stroke();
               } else if (isHighlightedNode) {
                 ctx.strokeStyle = "rgba(255, 198, 40, 1)";
-                ctx.lineWidth = 0.5;
+                ctx.lineWidth = 0.3;
+                ctx.stroke();
+              } else {
+                ctx.strokeStyle = "rgb(0, 0, 0)";
+                ctx.lineWidth = 0.1;
                 ctx.stroke();
               }
 
               if (!this.state.showNoLabels || node.id === selectedNodeID) {
                 if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode || this.state.showAllLabels) {
-                  if (this.getLinksToNode(node.id).length > 20 && label.length > 20) {
-                    label = label.slice(0,20) + '...';
+                  if (label.length > 45) {
+                    label = label.slice(0,45) + '.';
                   }
                   ctx.textAlign = 'center';
                   ctx.textBaseline = 'middle';
@@ -1383,6 +1440,151 @@ class ModelBuilder extends Component {
           />
       </div>
     );
+
+    // if we are on /model-builder/3d
+    if (this.props.is3D) {
+      renderedForceGraph = (
+        <div id='ontology' className="ForceGraphContainer" style={{overflowY: "hidden", maxHeight: "500px", position: "relative", }}>
+          <div style={{background:'black no-repeat center center fixed',backgroundSize:'cover',position:'absolute',height:'3000px',width:'3000px'}}></div>
+          <ForceGraph3D
+            linkOpacity={0.8}
+            nodeOpacity={0.9}
+            nodeRelSize={6}
+            nodeLabel="name"
+            enableNodeDrag
+            ref={el => { this.forceGraphRef = el; }}
+            graphData={data}
+            linkCurvature={link => { return link.curvature; }}
+            nodeResolution={16}
+            linkResolution={16}
+            cooldownTime={cooldownTime}
+            width={1900}
+            linkWidth={link => {
+              if (link.thickness === 1) {
+                return 1;
+              }
+              if (highlightedLinks.indexOf(link) > -1 || focusedLinks.indexOf(link) > -1) {
+                return "4";
+              } else {
+                return "2";
+              }
+            }}
+            linkColor={link => {
+
+              // if node is focused, grey everything else out
+              if (focusedLinks.length > 0 || focusedNodes.length > 0) {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return link.color;
+                } else {
+                  return 'rgba(0,0,0,0.2)';
+                }       
+              } else {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return "rgba(228, 82, 75, 0.7)";
+                } else if (highlightedLinks.indexOf(link) > -1) {
+                  return "rgba(255, 198, 40, 1)";
+                  // return "#e99bff";
+                } else {
+                  return link.color;
+                }
+              }
+            }}
+            linkLabel="id"
+            backgroundColor="rgba(0,0,0,0.99)"
+            linkDirectionalParticles={1}
+            linkDirectionalParticleWidth={link => {
+              // show all when toggled
+              if (this.state.shouldSimulate) {
+                return 4;
+              }
+              if (focusedLinks.length > 0) {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else {
+                  return 0;
+                }
+              } else {
+                if (focusedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else if (highlightedLinks.indexOf(link) > -1) {
+                  return 4;
+                } else {
+                  return 0;
+                }
+              }
+            }}
+            onNodeClick={this.handleNodeClick}
+            onNodeDrag={this.handleInteraction}
+            onNodeHover={this.handleNodeHover}
+            onLinkHover={this.handleLinkHover}
+            onLinkClick={this.handleLinkClick}
+            nodeCanvasObject={(node, ctx, globalScale) => {
+              let label = node.name.toUpperCase();
+              const fontSize = 11/globalScale;
+              let isHighlightedNode = highlightedNodes.indexOf(node) > -1;
+              let isFocusedNode = focusedNodes.indexOf(node) > -1;
+
+              ctx.font = `500 ${fontSize}px Roboto Sans-Serif`;
+              ctx.fillStyle = node.color;
+              ctx.beginPath();
+              ctx.arc(node.x,node.y,node.value * 3, 0, 2 * Math.PI);
+
+              if (focusedNodes.length > 0) {
+                if (selectedNodeID === node.id) {
+                  ctx.fillStyle = '#9cfcfa';
+                } else if (isFocusedNode) {
+                  ctx.fillStyle = node.color;
+                } else {
+                  ctx.fillStyle = 'rgba(150,150,150,1)';
+                }
+              } else {
+                if (isFocusedNode) {
+                  ctx.fillStyle = 'rgb(0,0,0)';
+                } else if (isHighlightedNode) {
+                  ctx.fillStyle = "rgb(255, 198, 40)";
+                } else {
+                  ctx.fillStyle = node.color;
+                }
+                ctx.fillStyle = node.color || "rgba(11, 179, 214, 1)";
+              }
+              ctx.fill();
+
+              if (isFocusedNode) {
+                ctx.strokeStyle = "rgb(0, 0, 0)";
+                ctx.lineWidth = 0.3;
+                ctx.stroke();
+              } else if (isHighlightedNode) {
+                ctx.strokeStyle = "rgba(255, 198, 40, 1)";
+                ctx.lineWidth = 0.3;
+                ctx.stroke();
+              } else {
+                ctx.strokeStyle = "rgb(0, 0, 0)";
+                ctx.lineWidth = 0.1;
+                ctx.stroke();
+              }
+
+              if (!this.state.showNoLabels || node.id === selectedNodeID) {
+                if (data.nodes.length < 40 || this.getLinksToNode(node.id).length > 20 || isHighlightedNode || isFocusedNode || this.state.showAllLabels) {
+                  if (label.length > 45) {
+                    label = label.slice(0,45) + '.';
+                  }
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillStyle = "black";
+
+                  let verticleOffset = node.value ? node.value * -4 : -5;
+                  if (node.value === 1) {
+                    verticleOffset = -5;
+                  }
+                  ctx.maxWidth = 20;
+                  ctx.fillText(label, node.x, node.y + verticleOffset);
+                }
+              }
+            }}
+          />
+      </div>
+      );
+    }
 
     const renderedConceptDropdownItems = data.concepts ? data.concepts.map((concept, index) => {
       return <MenuItem value={index + 2} primaryText={concept} />
