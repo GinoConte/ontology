@@ -73,13 +73,14 @@ function importLinks(callback) {
   csv(linkFile).then(function(data) {
     for (const datapoint in data) {
       const link = data[datapoint];
+      const referenceOrOpinion = (Math.floor(Math.random() * 2) % 2 == 0) ? 'via reference' : 'via opinion'; // random for demo purposes because we have no 'via opinion in the dataset
       if (link['Var 1']) {
         links.push({
           id: link['Var Link ID'],
           source: link['Var 2'],
           target: link['Var 1'],
-          linkType: link['Link Type'],
-          linkOrigin: link['Link Origin - Ref'] ? 'via reference' : 'via model',
+          linkType: (Math.floor(Math.random() * 8) % 8 == 0) ? 'Formula' : link['Link Type'],
+          linkOrigin: link['Link Origin - Ref'] ? referenceOrOpinion : 'via model',
           reference: link['Link Origin - Ref'] || '',
           model: link['Link Origin - Model'] || '',
           curvature: 0,
